@@ -531,7 +531,7 @@ class LiveVis(object):
         elif key == None:
             pass
         else:
-            print ' ===> Not sure what to do with', key
+            print 'Not sure what to do with key', key
 
     def display_frame(self, frame):
         frame_disp = cv2.resize(frame[:], self.panes['input'].data.shape[:2][::-1])

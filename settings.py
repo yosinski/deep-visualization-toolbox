@@ -3,6 +3,12 @@
 import os
 root_dir = os.path.dirname(os.path.abspath(__file__))
 
+# Set this to point to your compiled checkout of caffe
+caffevis_caffe_root      = '/path/to/caffe'
+
+if not os.path.exists(caffevis_caffe_root):
+    raise Exception('ERROR: Set caffevis_caffe_root in settings.py first.')
+
 # Global settings
 input_updater_capture_device = 0              # 0 default, on Mac works for builtin camera or external USB webcam
 input_updater_sleep_after_read_frame = 1.0/20    # Sleep after reading frame
@@ -39,7 +45,7 @@ stale_background = (.3, .3, .2)
 static_files_dir = 'input_images'
 static_files_regexp = '.*\.(jpg|jpeg|png)$'
 static_files_ignore_case = True
-static_file_stretch_mode = False        # True to stretch to square, False to crop to square
+static_file_stretch_mode = False        # True to stretch to square, False to crop to square. (Can change at runtime via 'stretch_mode' key.)
 
 
 keypress_pause_handle_iterations = 2    # int, 0+. How many times to go through the main loop after a keypress before resuming handling frames (0 to handle every frame as it arrives). Setting this to a value > 0 can enable more responsive keyboard input even when other settings are tuned to maximize the framerate. Default: 2
@@ -61,14 +67,7 @@ caffevis_help_clr   = (1,1,1)
 caffevis_help_fsize = 1.0 * global_font_size
 caffevis_help_thick = 1
 
-#print 'dirname(dirname(file)) is', os.path.dirname(os.path.dirname(__file__))
-#caffevis_caffe_root      = os.path.join(root_dir, '..')
-caffevis_caffe_root      = '/Users/jason/s/caffe'
-#print 'ROOT IS', caffevis_caffe_root
-#caffevis_deploy_prototxt = os.path.join(caffevis_caffe_root, 'jason/imagenet_deploy.prototxt')
-#caffevis_network_weights = os.path.join(caffevis_caffe_root, 'jason/140311_234854_afadfd3_priv_netbase_upgraded/caffe_imagenet_train_iter_450000')
-#caffevis_data_mean       = os.path.join(caffevis_caffe_root, 'python/caffe/imagenet/ilsvrc_2012_mean.npy')
-#print 'root dir is', root_dir
+
 caffevis_deploy_prototxt = root_dir + '/models/caffenet-yos/caffenet-yos-deploy.prototxt'
 caffevis_network_weights = root_dir + '/models/caffenet-yos/caffenet-yos-weights'
 caffevis_data_mean       = root_dir + '/models/caffenet-yos/ilsvrc_2012_mean.npy'
@@ -77,7 +76,6 @@ caffevis_unit_jpg_dir    = root_dir + '/models/caffenet-yos/unit_jpg_vis'
 
 caffevis_data_hw         = (227,227)
 caffevis_label_layers    = ('fc8', 'prob')
-#caffevis_unit_jpg_dir    = os.path.join(caffevis_caffe_root, 'jason/caffevis/downloaded_unit_vis/')
 caffevis_mode_gpu        = False
 caffevis_pause_after_keys = .10     # Pause Caffe forward/backward computation for this many seconds after a keypress. This is to keep the processor free for a brief period after a keypress, which allow the interface to feel much more responsive. After this period has passed, Caffe resumes computation, in CPU mode often occupying all cores. Default: .1
 caffevis_frame_wait_sleep = .01
@@ -96,8 +94,8 @@ caffevis_boost_indiv_choices = (0, .3, .5, .8, 1)
 caffevis_boost_indiv_default_idx = 0   # index into above list
 caffevis_boost_gamma_choices = (1, .7, .5, .3)
 caffevis_boost_gamma_default_idx = 0   # index into above list
-caffevis_init_show_label_predictions = False
-caffevis_init_show_unit_jpgs = False
+caffevis_init_show_label_predictions = True
+caffevis_init_show_unit_jpgs = True
 
 caffevis_control_face = 'FONT_HERSHEY_COMPLEX_SMALL'
 caffevis_control_loc = (15,0)   # r,c order

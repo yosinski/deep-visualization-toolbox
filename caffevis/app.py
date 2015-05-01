@@ -232,35 +232,49 @@ class JPGVisLoadingThread(CodependentThread):
                                     'regularized_opt',
                                     state_layer,
                                     '%s_%04d_montage.jpg' % (state_layer, state_selected_unit))
-            print '\n\nIOError HERE!!!!!!!!!!!\n\n'
-            img = caffe_load_image(jpg_path, color = True)
-            img_corner = crop_to_corner(img, 2)
-            images[0] = ensure_uint255_and_resize_to_fit(img_corner, resize_shape)
+            try:
+                img = caffe_load_image(jpg_path, color = True)
+                img_corner = crop_to_corner(img, 2)
+                images[0] = ensure_uint255_and_resize_to_fit(img_corner, resize_shape)
+            except IOError:
+                pass
 
             # 1. e.g. max_im/conv1/conv1_0037.jpg
             jpg_path = os.path.join(self.settings.caffevis_unit_jpg_dir,
                                     'max_im',
                                     state_layer,
                                     '%s_%04d.jpg' % (state_layer, state_selected_unit))
-            img = caffe_load_image(jpg_path, color = True)
-            images[1] = ensure_uint255_and_resize_to_fit(img, resize_shape)
+            try:
+                img = caffe_load_image(jpg_path, color = True)
+                images[1] = ensure_uint255_and_resize_to_fit(img, resize_shape)
+            except IOError:
+                pass                
 
             # 2. e.g. max_deconv/conv1/conv1_0037.jpg
-            jpg_path = os.path.join(self.settings.caffevis_unit_jpg_dir,
-                                    'max_deconv',
-                                    state_layer,
-                                    '%s_%04d.jpg' % (state_layer, state_selected_unit))
-            img = caffe_load_image(jpg_path, color = True)
-            images[2] = ensure_uint255_and_resize_to_fit(img, resize_shape)
+            try:
+                jpg_path = os.path.join(self.settings.caffevis_unit_jpg_dir,
+                                        'max_deconv',
+                                        state_layer,
+                                        '%s_%04d.jpg' % (state_layer, state_selected_unit))
+                img = caffe_load_image(jpg_path, color = True)
+                images[2] = ensure_uint255_and_resize_to_fit(img, resize_shape)
+            except IOError:
+                pass
 
-            # Stack together
-            print 'Stacking:', [im.shape for im in images]
-            stack_axis = 0 if self.settings.caffevis_jpgvis_stack_vert else 1
-            img_stacked = np.concatenate(images, axis = stack_axis)
-            print 'Stacked:', img_stacked.shape
-            img_resize = ensure_uint255_and_resize_to_fit(img_stacked, data_shape)
-            print 'Resized:', img_resize.shape
+            # Prune images that were not found:
+            images = [im for im in images if im is not None]
             
+            # Stack together
+            if len(images) > 0:
+                #print 'Stacking:', [im.shape for im in images]
+                stack_axis = 0 if self.settings.caffevis_jpgvis_stack_vert else 1
+                img_stacked = np.concatenate(images, axis = stack_axis)
+                #print 'Stacked:', img_stacked.shape
+                img_resize = ensure_uint255_and_resize_to_fit(img_stacked, data_shape)
+                #print 'Resized:', img_resize.shape
+            else:
+                img_resize = 'not_found'
+                
             self.cache.set(jpgvis_to_load_key, img_resize)
 
             with self.state.lock:
@@ -481,22 +495,22 @@ class CaffeVisAppState(object):
                     self.cursor_area = 'top'
         self._ensure_valid_selected()
 
-    def update_tiles_height_width(self, height_width):
+    def update_tiles_height_width(self, height_width, n_valid):
         '''Update the height x width of the tiles currently
         displayed. Ensures (a) that a valid tile is selected and (b)
-        that up/down/left/right motion works as expected.
+        that up/down/left/right motion works as expected. n_valid may
+        be less than prod(height_width).
         '''
 
         assert len(height_width) == 2, 'give as (hh,ww) tuple'
         self.tiles_height_width = height_width
-        self.tiles_number = height_width[0] * height_width[1]
+        self.tiles_number = n_valid
         # If the number of tiles has shrunk, the selection may now be invalid
         self._ensure_valid_selected()
         
     def _ensure_valid_selected(self):
         self.selected_unit = max(0, self.selected_unit)
         self.selected_unit = min(self.tiles_number-1, self.selected_unit)
-
 
 
 class CaffeVisApp(BaseApp):
@@ -887,7 +901,7 @@ class CaffeVisApp(BaseApp):
         else:
             padval = self.settings.window_background
         # Tell the state about the updated (height,width) tile display (ensures valid selection)
-        self.state.update_tiles_height_width((tile_rows,tile_cols))
+        self.state.update_tiles_height_width((tile_rows,tile_cols), display_3D.shape[0])
 
         #if self.state.layers_show_back:
         #    highlights = [(.5, .5, 1)] * n_tiles
@@ -1009,10 +1023,13 @@ class CaffeVisApp(BaseApp):
             img_key = (state_layer, state_selected_unit, pane.data.shape)
             img_resize = self.img_cache.get(img_key, None)
             if img_resize is None:
-                # Show stale image and request load by JPGVisLoadingThread
+                # If img_resize is None, loading has not yet been attempted, so show stale image and request load by JPGVisLoadingThread
                 with self.state.lock:
                     self.state.jpgvis_to_load_key = img_key
                 pane.data[:] = to_255(self.settings.stale_background)
+            elif img_resize == 'not_found':
+                # If img_resize is 'not_found', loading was already attempted but no jpg assets were found. Just display disabled.
+                pane.data[:] = to_255(self.settings.window_background)
             else:
                 # Show image
                 pane.data[:img_resize.shape[0], :img_resize.shape[1], :] = img_resize

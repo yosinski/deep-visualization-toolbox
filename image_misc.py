@@ -94,7 +94,7 @@ def caffe_load_image(filename, color=True, as_uint=False):
         of size (H x W x 3) in RGB or
         of size (H x W x 1) in grayscale.
     '''
-    with WithTimer('imread'):
+    with WithTimer('imread', quiet = True):
         if as_uint:
             img = skimage.io.imread(filename)
         else:
