@@ -944,11 +944,8 @@ class CaffeVisApp(BaseApp):
         with self.state.lock:
             if self.state.cursor_area == 'bottom':
                 mode = 'selected'
-            elif not self.state.back_enabled:
-                mode = 'prob_labels'
             else:
-                # Skip drawing labels if backward info is shown
-                mode = None
+                mode = 'prob_labels'
                 
         if mode == 'selected':
             unit_data = layer_data_normalized[self.state.selected_unit]
