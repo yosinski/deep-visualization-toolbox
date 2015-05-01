@@ -549,7 +549,7 @@ class LiveVis(object):
         loc = self.settings.caffevis_help_loc[::-1]   # Reverse to OpenCV c,r order
 
         lines = []
-        lines.append([FormattedString('~ ~ ~ Help ~ ~ ~', defaults, align='center', width=self.help_pane.j_size)])
+        lines.append([FormattedString('~ ~ ~ Deep Visualization Toolbox ~ ~ ~', defaults, align='center', width=self.help_pane.j_size)])
         lines.append([FormattedString('', defaults)])
         lines.append([FormattedString('Base keys', defaults)])
 

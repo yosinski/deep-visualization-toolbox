@@ -289,9 +289,10 @@ class JPGVisLoadingThread(CodependentThread):
 class CaffeVisAppState(object):
     '''State of CaffeVis app.'''
 
-    def __init__(self, net, settings):
+    def __init__(self, net, settings, bindings):
         self.lock = Lock()  # State is accessed in multiple threads
         self.settings = settings
+        self.bindings = bindings
         self._layers = net.blobs.keys()
         self._layers = self._layers[1:]  # chop off data layer
         self.layer_boost_indiv_choices = self.settings.caffevis_boost_indiv_choices   # 0-1, 0 is noop
@@ -330,8 +331,10 @@ class CaffeVisAppState(object):
         self.show_label_predictions = self.settings.caffevis_init_show_label_predictions
         self.show_unit_jpgs = self.settings.caffevis_init_show_unit_jpgs
         self.drawing_stale = True
+        kh,_ = self.bindings.get_key_help('help_mode')
+        self.extra_msg = '%s for help' % kh[0]
         
-    def handle_key(self, key, bindings):
+    def handle_key(self, key):
         #print 'Ignoring key:', key
         if key == -1:
             return key
@@ -339,17 +342,16 @@ class CaffeVisAppState(object):
         with self.lock:
             key_handled = True
             self.last_key_at = time.time()
-            if bindings.match('reset_state', key):
+            if self.bindings.match('reset_state', key):
                 self._reset_user_state()
-                self.extra_msg = 'h for help'
-            elif bindings.match('sel_layer_left', key):
+            elif self.bindings.match('sel_layer_left', key):
                 #hh,ww = self.tiles_height_width
                 #self.selected_unit = self.selected_unit % ww   # equivalent to scrolling all the way to the top row
                 #self.cursor_area = 'top' # Then to the control pane
                 self.layer_idx = max(0, self.layer_idx - 1)
                 self.layer = self._layers[self.layer_idx]
                 self._ensure_valid_selected()
-            elif bindings.match('sel_layer_right', key):
+            elif self.bindings.match('sel_layer_right', key):
                 #hh,ww = self.tiles_height_width
                 #self.selected_unit = self.selected_unit % ww   # equivalent to scrolling all the way to the top row
                 #self.cursor_area = 'top' # Then to the control pane
@@ -357,33 +359,33 @@ class CaffeVisAppState(object):
                 self.layer = self._layers[self.layer_idx]
                 self._ensure_valid_selected()
 
-            elif bindings.match('sel_left', key):
+            elif self.bindings.match('sel_left', key):
                 self.move_selection('left')
-            elif bindings.match('sel_right', key):
+            elif self.bindings.match('sel_right', key):
                 self.move_selection('right')
-            elif bindings.match('sel_down', key):
+            elif self.bindings.match('sel_down', key):
                 self.move_selection('down')
-            elif bindings.match('sel_up', key):
+            elif self.bindings.match('sel_up', key):
                 self.move_selection('up')
 
-            elif bindings.match('sel_left_fast', key):
+            elif self.bindings.match('sel_left_fast', key):
                 self.move_selection('left', self.settings.caffevis_fast_move_dist)
-            elif bindings.match('sel_right_fast', key):
+            elif self.bindings.match('sel_right_fast', key):
                 self.move_selection('right', self.settings.caffevis_fast_move_dist)
-            elif bindings.match('sel_down_fast', key):
+            elif self.bindings.match('sel_down_fast', key):
                 self.move_selection('down', self.settings.caffevis_fast_move_dist)
-            elif bindings.match('sel_up_fast', key):
+            elif self.bindings.match('sel_up_fast', key):
                 self.move_selection('up', self.settings.caffevis_fast_move_dist)
 
-            elif bindings.match('boost_individual', key):
+            elif self.bindings.match('boost_individual', key):
                 self.layer_boost_indiv_idx = (self.layer_boost_indiv_idx + 1) % len(self.layer_boost_indiv_choices)
                 self.layer_boost_indiv = self.layer_boost_indiv_choices[self.layer_boost_indiv_idx]
-            elif bindings.match('boost_gamma', key):
+            elif self.bindings.match('boost_gamma', key):
                 self.layer_boost_gamma_idx = (self.layer_boost_gamma_idx + 1) % len(self.layer_boost_gamma_choices)
                 self.layer_boost_gamma = self.layer_boost_gamma_choices[self.layer_boost_gamma_idx]
-            elif bindings.match('pattern_mode', key):
+            elif self.bindings.match('pattern_mode', key):
                 self.pattern_mode = not self.pattern_mode
-            elif bindings.match('show_back', key):
+            elif self.bindings.match('show_back', key):
                 # If in pattern mode: switch to fwd/back. Else toggle fwd/back mode
                 if self.pattern_mode:
                     self.pattern_mode = False
@@ -393,7 +395,7 @@ class CaffeVisAppState(object):
                     if not self.back_enabled:
                         self.back_enabled = True
                         self.back_stale = True
-            elif bindings.match('back_mode', key):
+            elif self.bindings.match('back_mode', key):
                 if not self.back_enabled:
                     self.back_enabled = True
                     self.back_mode = 'grad'
@@ -404,7 +406,7 @@ class CaffeVisAppState(object):
                         self.back_stale = True
                     else:
                         self.back_enabled = False
-            elif bindings.match('back_filt_mode', key):
+            elif self.bindings.match('back_filt_mode', key):
                     if self.back_filt_mode == 'raw':
                         self.back_filt_mode = 'gray'
                     elif self.back_filt_mode == 'gray':
@@ -413,7 +415,7 @@ class CaffeVisAppState(object):
                         self.back_filt_mode = 'normblur'
                     else:
                         self.back_filt_mode = 'raw'
-            elif bindings.match('ez_back_mode_loop', key):
+            elif self.bindings.match('ez_back_mode_loop', key):
                 # Cycle:
                 # off -> grad (raw) -> grad(gray) -> grad(norm) -> grad(normblur) -> deconv
                 if not self.back_enabled:
@@ -429,23 +431,23 @@ class CaffeVisAppState(object):
                     self.back_stale = True
                 else:
                     self.back_enabled = False
-            elif bindings.match('freeze_back_unit', key):
+            elif self.bindings.match('freeze_back_unit', key):
                 # Freeze selected layer/unit as backprop unit
                 self.backprop_selection_frozen = not self.backprop_selection_frozen
                 if self.backprop_selection_frozen:
                     # Grap layer/selected_unit upon transition from non-frozen -> frozen
                     self.backprop_layer = self.layer
                     self.backprop_unit = self.selected_unit                    
-            elif bindings.match('zoom_mode', key):
+            elif self.bindings.match('zoom_mode', key):
                 self.layers_pane_zoom_mode = (self.layers_pane_zoom_mode + 1) % 3
                 if self.layers_pane_zoom_mode == 2 and not self.back_enabled:
                     # Skip zoom into backprop pane when backprop is off
                     self.layers_pane_zoom_mode = 0
 
-            elif bindings.match('toggle_label_predictions', key):
+            elif self.bindings.match('toggle_label_predictions', key):
                 self.show_label_predictions = not self.show_label_predictions
 
-            elif bindings.match('toggle_unit_jpgs', key):
+            elif self.bindings.match('toggle_unit_jpgs', key):
                 self.show_unit_jpgs = not self.show_unit_jpgs
 
             else:
@@ -578,7 +580,7 @@ class CaffeVisApp(BaseApp):
         self.img_cache = FIFOLimitedArrayCache(settings.caffevis_jpg_cache_size)
         
     def start(self):
-        self.state = CaffeVisAppState(self.net, self.settings)
+        self.state = CaffeVisAppState(self.net, self.settings, self.bindings)
         self.state.drawing_stale = True
         self.layer_print_names = [get_pp_layer_name(nn) for nn in self.state._layers]
 
@@ -1044,7 +1046,7 @@ class CaffeVisApp(BaseApp):
             pane.data[:] = to_255(self.settings.window_background)
 
     def handle_key(self, key, panes):
-        return self.state.handle_key(key, self.bindings)
+        return self.state.handle_key(key)
 
     def get_back_what_to_disp(self):
         '''Whether to show back diff information or stale or disabled indicator'''
@@ -1071,8 +1073,43 @@ class CaffeVisApp(BaseApp):
         lines = []
         lines.append([FormattedString('', defaults)])
         lines.append([FormattedString('Caffevis keys', defaults)])
+        
+        kl,_ = self.bindings.get_key_help('sel_left')
+        kr,_ = self.bindings.get_key_help('sel_right')
+        ku,_ = self.bindings.get_key_help('sel_up')
+        kd,_ = self.bindings.get_key_help('sel_down')
+        klf,_ = self.bindings.get_key_help('sel_left_fast')
+        krf,_ = self.bindings.get_key_help('sel_right_fast')
+        kuf,_ = self.bindings.get_key_help('sel_up_fast')
+        kdf,_ = self.bindings.get_key_help('sel_down_fast')
 
-        for tag in ('sel_left', 'sel_right', 'sel_down', 'sel_up', 'boost_individual', 'boost_gamma', 'pattern_mode', 'show_back', 'back_mode', 'back_filt_mode', 'freeze_back_unit', 'zoom_mode'):
+        keys_nav_0 = ','.join([kk[0] for kk in (kl, kr, ku, kd)])
+        keys_nav_1 = ''
+        if len(kl)>1 and len(kr)>1 and len(ku)>1 and len(kd)>1:
+            keys_nav_1 += ' or '
+            keys_nav_1 += ','.join([kk[1] for kk in (kl, kr, ku, kd)])
+        keys_nav_f = ','.join([kk[0] for kk in (klf, krf, kuf, kdf)])
+        nav_string = 'Navigate with %s%s. Use %s to move faster.' % (keys_nav_0, keys_nav_1, keys_nav_f)
+        lines.append([FormattedString('', defaults, width=120, align='right'),
+                      FormattedString(nav_string, defaults)])
+
+        #label = '%10s:' % (
+        #help_string = 'Move cursor left, right, up, or down'
+        #lines.append([FormattedString(label, defaults, width=120, align='right'),
+        #              FormattedString(help_string, defaults)])
+        #if len(kl)>1 and len(kr)>1 and len(ku)>1 and len(kd)>1:
+        #    label = '%10s:' % (','.join([kk[1] for kk in (kl, kr, ku, kd)]))
+        #    help_string = 'Move cursor left, right, up, or down'
+        #    lines.append([FormattedString(label, defaults, width=120, align='right'),
+        #                  FormattedString(help_string, defaults)])
+        #label = '%10s:' % (','.join([kk[0] for kk in (klf, krf, kuf, kdf)]))
+        #help_string = 'Move cursor left, right, up, or down (faster)'
+        #lines.append([FormattedString(label, defaults, width=120, align='right'),
+        #              FormattedString(help_string, defaults)])
+            
+        for tag in ('sel_layer_left', 'sel_layer_right', 'zoom_mode', 'pattern_mode',
+                    'ez_back_mode_loop', 'freeze_back_unit', 'show_back', 'back_mode', 'back_filt_mode',
+                    'boost_gamma', 'boost_individual', 'reset_state'):
             key_strings, help_string = self.bindings.get_key_help(tag)
             label = '%10s:' % (','.join(key_strings))
             lines.append([FormattedString(label, defaults, width=120, align='right'),

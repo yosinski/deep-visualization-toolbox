@@ -40,9 +40,9 @@ _.add('static_file_decrement', Key.w,
 _.add('help_mode', Key.h,
        'Toggle this help screen')
 _.add('stretch_mode', Key.n0,
-       'Toggle between cropping/stretching static files to square')
+       'Toggle between cropping and stretching static files to be square')
 _.add('debug_level', Key.n5,
-       'Toggle debug level between 0 (quiet), 1 (some timing info) and 2 (all timing info)')
+       'Cycle debug level between 0 (quiet), 1 (some timing info) and 2 (all timing info)')
 _.add('quit', Key.q,
        'Quit')
 
@@ -66,27 +66,30 @@ _.add('sel_down_fast', Key.K,
 _.add('sel_up_fast', Key.I,
        '')
 _.add_multikey('sel_layer_left', [Key.u,Key.U],
-       '')
+       'Select previous layer without moving cursor')
 _.add_multikey('sel_layer_right', [Key.o,Key.O],
-       '')
-_.add('boost_gamma', Key.t,
-       '')
-_.add('boost_individual', Key.T,
-       '')
-_.add('pattern_mode', Key.s,
-       'Show or hide overlay of preferred input image (found via regularized optimization)')
-_.add('show_back', Key.a,
-       'Toggle showing forward pass activations or backward pass activations')
-_.add('ez_back_mode_loop', Key.b,
-       '')
-_.add('back_mode', Key.n,
-       '')
-_.add('back_filt_mode', Key.m,
-       '')
-_.add('freeze_back_unit', Key.d,
-       '')
+       'Select next layer without moving cursor')
+
 _.add('zoom_mode', Key.z,
-       '')
+       'Cycle zooming through {currently selected unit, backprop results, none}')
+_.add('pattern_mode', Key.s,
+       'Toggle overlay of preferred input stimulus (regularized optimized images)')
+
+_.add('ez_back_mode_loop', Key.b,
+       'Cycle through a few common backprop/deconv modes')
+_.add('freeze_back_unit', Key.d,
+       'Freeze the bprop/deconv origin to be the currently selected unit')
+_.add('show_back', Key.a,
+       'Toggle between showing forward activations and back/deconv diffs')
+_.add('back_mode', Key.n,
+       '(expert) Change back mode directly.')
+_.add('back_filt_mode', Key.m,
+       '(expert) Change back output filter directly.')
+
+_.add('boost_gamma', Key.t,
+       'Boost contrast using gamma correction')
+_.add('boost_individual', Key.T,
+       'Boost contrast by scaling each channel to use more of its individual range')
 _.add('toggle_label_predictions', Key.n8,
        'Turn on or off display of prob label values')
 _.add('toggle_unit_jpgs', Key.n9,
