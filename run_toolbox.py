@@ -1,8 +1,17 @@
 #! /usr/bin/env python
 
 from core import LiveVis
-import settings
 from bindings import bindings
+try:
+    import settings
+except:
+    print '\nCould not import settings from settings.py. You should first copy'
+    print 'settings.py.template to settings.py and edit the caffevis_caffe_root'
+    print 'variable to point to your caffe path.'
+    print
+    print '  $ cp settings.py.template settings.py'
+    print '  $ < edit settings.py >\n'
+    raise
 
 
 
