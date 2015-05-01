@@ -525,7 +525,16 @@ class CaffeVisApp(BaseApp):
         sys.path.insert(0, os.path.join(settings.caffevis_caffe_root, 'python'))
         import caffe
 
-        self._data_mean = np.load(settings.caffevis_data_mean)
+        try:
+            self._data_mean = np.load(settings.caffevis_data_mean)
+        except IOError:
+            print '\n\nCound not load mean file:', settings.caffevis_data_mean
+            print 'Ensure that the values in settings.py point to a valid model weights file, network'
+            print 'definition prototxt, and mean. To fetch a default model and mean file, use:\n'
+            print '$ cd models/caffenet-yos/'
+            print '$ ./fetch.sh\n\n'
+            raise
+        
         # Crop center region (e.g. 227x227) if mean is larger (e.g. 256x256)
         excess_h = self._data_mean.shape[1] - self.settings.caffevis_data_hw[0]
         excess_w = self._data_mean.shape[2] - self.settings.caffevis_data_hw[1]

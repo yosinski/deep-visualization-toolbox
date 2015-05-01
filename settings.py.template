@@ -83,9 +83,9 @@ caffevis_frame_wait_sleep = .01
 caffevis_jpg_load_sleep = .01
 #caffevis_jpg_load_sleep = 2.0
 caffevis_fast_move_dist = 3      # How far to move when using fast left/right/up/down keys
-# Size of jpg reading cache in bytes (default: 2GB)
-# Note: largest fc6/fc7 images are ~600MB. Cache smaller than this will be painfully slow when using patterns_mode for fc6 and fc7.
-# Cache use when all layers have been loaded is ~1.6GB
+# Maximum size of jpg cache in bytes (default: 2GB)
+# Note: the largest fc6/fc7 images are ~600MB. Cache sizes smaller than this will cause painfully slow performance when using patterns_mode for fc6 and fc7.
+# Cache use when all layer motages have been loaded is ~1.6GB
 caffevis_jpg_cache_size  = 2000*1024**2
 
 caffevis_grad_norm_blur_radius = 4.0
