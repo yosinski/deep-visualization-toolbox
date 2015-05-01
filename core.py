@@ -218,9 +218,9 @@ class InputImageFetcher(CodependentThread):
             for filename in os.listdir(self.settings.static_files_dir):
                 if re.match(self.settings.static_files_regexp, filename, match_flags):
                     available_files.append(filename)
-            print 'Found files:'
-            for filename in available_files:
-                print '   %s' % filename
+            #print 'Found files:'
+            #for filename in available_files:
+            #    print '   %s' % filename
             assert len(available_files) != 0, ('Error: No files found in %s matching %s (current working directory is %s)' %
                                                (self.settings.static_files_dir, self.settings.static_files_regexp, os.getcwd()))
             if self.static_file_idx is None:
@@ -371,7 +371,7 @@ class LiveVis(object):
                     break
                 else:
                     keys.append(key)
-                    print 'Got key:', key
+                    #print 'Got key:', key
             now = time.time()
             #print 'Since last:', now - last_render
 
@@ -472,7 +472,8 @@ class LiveVis(object):
             ii += 1
             since_keypress += 1
             since_redraw += 1
-            sys.stdout.write('.')
+            if ii % 2 == 0:
+                sys.stdout.write('.')
             sys.stdout.flush()
             # Extra sleep for debugging. In production all main loop sleep should be in cv2.waitKey.
             #time.sleep(2)
@@ -577,8 +578,4 @@ class LiveVis(object):
 
         for app_name, app in self.apps.iteritems():
             locy = app.draw_help(self.help_pane, locy)
-
-
-
-
 
