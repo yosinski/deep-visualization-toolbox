@@ -1,15 +1,13 @@
-# Deep Visualization Toolbox
+# Deep Visualization Toolbox Installation
 
 
-
-## Installation
 
 ### Step 0: Compile master branch of caffe (optional)
 
-Get the master (main) branch of [caffe](http://caffe.berkeleyvision.org/) to compile on your
+Get the master branch of [Caffe](http://caffe.berkeleyvision.org/) to compile on your
 machine. If you've never used Caffe before, it can take a bit of time to get all the required libraries in place. Fortunately, the [installation process is well documented](http://caffe.berkeleyvision.org/installation.html).
 
-Note: You can set `CPU_ONLY := 1` in your `Makefile.config` to skip all the Cuda/GPU stuff.
+Note: You can set `CPU_ONLY := 1` in your `Makefile.config` to skip all the Cuda/GPU stuff. The Deep Visualization Toolbox can run with Caffe in either CPU or GPU mode.
 
 
 
@@ -27,18 +25,18 @@ Starting from your caffe directory, run:
     $ make -j
     $ make -j pycaffe
 
-As noted above, feel free to compile in `CPU_ONLY` mode.
+As noted above, feel free to compile in `CPU_ONLY` mode if desired.
 
 
 
-### Step 2: 
+### Step 2: Download and configure Deep Visualization Toolbox code
 
-Download the Deep Visualization Toolbox code. You can put it wherever you like:
+You can put it wherever you like:
 
     $ git clone https://github.com/yosinski/deep-visualization-toolbox
     $ cd deep_visualization_toolbox
 
-Copy settings.py.template to settings.py and edit it so the `caffevis_caffe_root` variable points to your caffe directory:
+Copy settings.py.template to settings.py and edit it so the `caffevis_caffe_root` variable points to the directory where you've compiled caffe in Step 1:
 
     $ cp settings.py.template settings.py
     $ < edit settings.py >
