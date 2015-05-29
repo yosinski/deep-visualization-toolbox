@@ -36,7 +36,7 @@ You can put it wherever you like:
     $ git clone https://github.com/yosinski/deep-visualization-toolbox
     $ cd deep_visualization_toolbox
 
-Copy settings.py.template to settings.py and edit it so the `caffevis_caffe_root` variable points to the directory where you've compiled caffe in Step 1:
+Copy `settings.py.template` to `settings.py` and edit it so the `caffevis_caffe_root` variable points to the directory where you've compiled caffe in Step 1:
 
     $ cp settings.py.template settings.py
     $ < edit settings.py >
@@ -54,7 +54,7 @@ Simple:
 
     $ ./run_toolbox.py
 
-Once the toolbox is running, push 'h' to show a help screen. You can also have a look at bindings.py to see what the various keys do.
+Once the toolbox is running, push 'h' to show a help screen. You can also have a look at `bindings.py` to see what the various keys do. If the window is too large or too small for your screen, set the `global_scale` variable in `settings.py` to a value smaller or larger than one.
 
 
 
