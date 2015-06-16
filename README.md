@@ -5,13 +5,13 @@
 ### Step 0: Compile master branch of caffe (optional)
 
 Get the master branch of [Caffe](http://caffe.berkeleyvision.org/) to compile on your
-machine. If you've never used Caffe before, it can take a bit of time to get all the required libraries in place. Fortunately, the [installation process is well documented](http://caffe.berkeleyvision.org/installation.html).
+machine. If you've never used Caffe before, it can take a bit of time to get all the required libraries in place. Fortunately, the [installation process is well documented](http://caffe.berkeleyvision.org/installation.html). When you're installing OpenCV, install the Python bindings as well (see Step 2 below).
 
 Note: You can set `CPU_ONLY := 1` in your `Makefile.config` to skip all the Cuda/GPU stuff. The Deep Visualization Toolbox can run with Caffe in either CPU or GPU mode.
 
 
 
-### Step 1: Compile deconv-deep-vis-toolbox branch of caffe
+### Step 1: Compile the deconv-deep-vis-toolbox branch of caffe
 
 Instead of using the master branch of caffe, to use the demo
 you'll need a slightly modified branch (supporting deconv and a few
@@ -29,7 +29,23 @@ As noted above, feel free to compile in `CPU_ONLY` mode if desired.
 
 
 
-### Step 2: Download and configure Deep Visualization Toolbox code
+### Step 2: Install python-opencv
+
+You may have already installed the `python-opencv` bindings as part of the Caffe setup process. If `import cv2` works from Python, then you're all set. If not, install the bindings like this:
+
+Linux:
+
+    $ sudo apt-get install python-opencv
+
+Mac using [homebrew](http://brew.sh/) (if desired, add option `--with-tbb` to enable parallel code using Intel TBB):
+
+    $ brew install opencv
+
+Other install options on Mac may also work well.
+
+
+
+### Step 3: Download and configure Deep Visualization Toolbox code
 
 You can put it wherever you like:
 
@@ -48,7 +64,7 @@ Download the example model weights and corresponding top-9 visualizations saved 
 
 
 
-### Step 3: Run it!
+### Step 4: Run it!
 
 Simple:
 
@@ -61,4 +77,4 @@ Once the toolbox is running, push 'h' to show a help screen. You can also have a
 
 ## Troubleshooting
 
-If you have any problems getting the code running, please feel free to [email me](http://yosinski.com/). I might have left out an important detail here or there :).
+If you have any problems getting the code running, please feel free to [email me](http://yosinski.com/) or [submit an issue](https://github.com/yosinski/deep-visualization-toolbox/issues). I might have left out an important detail here or there :).
