@@ -32,6 +32,7 @@ class Bindings(object):
             masked_keycode = keycode & mask
             if masked_keycode in self._key_patterns[mask]:
                 label = self._key_patterns[mask][masked_keycode]
+                break
         
         if extra_info:
             return label, [keycode & mask for mask in reversed(sorted(self._key_patterns.keys()))]
