@@ -342,16 +342,17 @@ class CaffeVisAppState(object):
         with self.lock:
             key_handled = True
             self.last_key_at = time.time()
-            if self.bindings.match('reset_state', key):
+            tag = self.bindings.get_tag(key)
+            if tag == 'reset_state':
                 self._reset_user_state()
-            elif self.bindings.match('sel_layer_left', key):
+            elif tag == 'sel_layer_left':
                 #hh,ww = self.tiles_height_width
                 #self.selected_unit = self.selected_unit % ww   # equivalent to scrolling all the way to the top row
                 #self.cursor_area = 'top' # Then to the control pane
                 self.layer_idx = max(0, self.layer_idx - 1)
                 self.layer = self._layers[self.layer_idx]
                 self._ensure_valid_selected()
-            elif self.bindings.match('sel_layer_right', key):
+            elif tag == 'sel_layer_right':
                 #hh,ww = self.tiles_height_width
                 #self.selected_unit = self.selected_unit % ww   # equivalent to scrolling all the way to the top row
                 #self.cursor_area = 'top' # Then to the control pane
@@ -359,33 +360,33 @@ class CaffeVisAppState(object):
                 self.layer = self._layers[self.layer_idx]
                 self._ensure_valid_selected()
 
-            elif self.bindings.match('sel_left', key):
+            elif tag == 'sel_left':
                 self.move_selection('left')
-            elif self.bindings.match('sel_right', key):
+            elif tag == 'sel_right':
                 self.move_selection('right')
-            elif self.bindings.match('sel_down', key):
+            elif tag == 'sel_down':
                 self.move_selection('down')
-            elif self.bindings.match('sel_up', key):
+            elif tag == 'sel_up':
                 self.move_selection('up')
 
-            elif self.bindings.match('sel_left_fast', key):
+            elif tag == 'sel_left_fast':
                 self.move_selection('left', self.settings.caffevis_fast_move_dist)
-            elif self.bindings.match('sel_right_fast', key):
+            elif tag == 'sel_right_fast':
                 self.move_selection('right', self.settings.caffevis_fast_move_dist)
-            elif self.bindings.match('sel_down_fast', key):
+            elif tag == 'sel_down_fast':
                 self.move_selection('down', self.settings.caffevis_fast_move_dist)
-            elif self.bindings.match('sel_up_fast', key):
+            elif tag == 'sel_up_fast':
                 self.move_selection('up', self.settings.caffevis_fast_move_dist)
 
-            elif self.bindings.match('boost_individual', key):
+            elif tag == 'boost_individual':
                 self.layer_boost_indiv_idx = (self.layer_boost_indiv_idx + 1) % len(self.layer_boost_indiv_choices)
                 self.layer_boost_indiv = self.layer_boost_indiv_choices[self.layer_boost_indiv_idx]
-            elif self.bindings.match('boost_gamma', key):
+            elif tag == 'boost_gamma':
                 self.layer_boost_gamma_idx = (self.layer_boost_gamma_idx + 1) % len(self.layer_boost_gamma_choices)
                 self.layer_boost_gamma = self.layer_boost_gamma_choices[self.layer_boost_gamma_idx]
-            elif self.bindings.match('pattern_mode', key):
+            elif tag == 'pattern_mode':
                 self.pattern_mode = not self.pattern_mode
-            elif self.bindings.match('show_back', key):
+            elif tag == 'show_back':
                 # If in pattern mode: switch to fwd/back. Else toggle fwd/back mode
                 if self.pattern_mode:
                     self.pattern_mode = False
@@ -395,7 +396,7 @@ class CaffeVisAppState(object):
                     if not self.back_enabled:
                         self.back_enabled = True
                         self.back_stale = True
-            elif self.bindings.match('back_mode', key):
+            elif tag == 'back_mode':
                 if not self.back_enabled:
                     self.back_enabled = True
                     self.back_mode = 'grad'
@@ -406,7 +407,7 @@ class CaffeVisAppState(object):
                         self.back_stale = True
                     else:
                         self.back_enabled = False
-            elif self.bindings.match('back_filt_mode', key):
+            elif tag == 'back_filt_mode':
                     if self.back_filt_mode == 'raw':
                         self.back_filt_mode = 'gray'
                     elif self.back_filt_mode == 'gray':
@@ -415,7 +416,7 @@ class CaffeVisAppState(object):
                         self.back_filt_mode = 'normblur'
                     else:
                         self.back_filt_mode = 'raw'
-            elif self.bindings.match('ez_back_mode_loop', key):
+            elif tag == 'ez_back_mode_loop':
                 # Cycle:
                 # off -> grad (raw) -> grad(gray) -> grad(norm) -> grad(normblur) -> deconv
                 if not self.back_enabled:
@@ -431,23 +432,23 @@ class CaffeVisAppState(object):
                     self.back_stale = True
                 else:
                     self.back_enabled = False
-            elif self.bindings.match('freeze_back_unit', key):
+            elif tag == 'freeze_back_unit':
                 # Freeze selected layer/unit as backprop unit
                 self.backprop_selection_frozen = not self.backprop_selection_frozen
                 if self.backprop_selection_frozen:
                     # Grap layer/selected_unit upon transition from non-frozen -> frozen
                     self.backprop_layer = self.layer
                     self.backprop_unit = self.selected_unit                    
-            elif self.bindings.match('zoom_mode', key):
+            elif tag == 'zoom_mode':
                 self.layers_pane_zoom_mode = (self.layers_pane_zoom_mode + 1) % 3
                 if self.layers_pane_zoom_mode == 2 and not self.back_enabled:
                     # Skip zoom into backprop pane when backprop is off
                     self.layers_pane_zoom_mode = 0
 
-            elif self.bindings.match('toggle_label_predictions', key):
+            elif tag == 'toggle_label_predictions':
                 self.show_label_predictions = not self.show_label_predictions
 
-            elif self.bindings.match('toggle_unit_jpgs', key):
+            elif tag == 'toggle_unit_jpgs':
                 self.show_unit_jpgs = not self.show_unit_jpgs
 
             else:
@@ -866,7 +867,7 @@ class CaffeVisApp(BaseApp):
                 col_downsamp_factor = int(np.ceil(float(display_3D_highres.shape[2]) / (pane.data.shape[1] / tile_cols - 2)))
                 ds = max(row_downsamp_factor, col_downsamp_factor)
                 if ds > 1:
-                    print 'Downsampling by', ds
+                    #print 'Downsampling by', ds
                     display_3D = display_3D_highres[:,::ds,::ds,:]
                 else:
                     display_3D = display_3D_highres

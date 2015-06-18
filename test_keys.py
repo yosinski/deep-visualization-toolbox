@@ -20,6 +20,7 @@
 import sys
 import cv2
 import keys
+from bindings import bindings
 img = cv2.imread('input_images/ILSVRC2012_val_00000610.jpg')    # load example image
 
 
@@ -27,17 +28,26 @@ img = cv2.imread('input_images/ILSVRC2012_val_00000610.jpg')    # load example i
 def check_key(key_str):
     print '  Press key %5s: ' % key_str,
     sys.stdout.flush()
-    key = cv2.waitKey(0)
-    found = False
-    for k,v in keys.Key.__dict__.iteritems():
-        if '__' in k: continue     # Skip __module__, etc.
-        num,st = v
-        if num == key:
-            print 'got code %d = %s' % (num,st)
-            found = True
-            break
-    if not found:
-        print 'code not found:', key
+    keycode = cv2.waitKey(0)
+    label, masked_vals = bindings.get_key_label_from_keycode(keycode, extra_info = True)
+    masked_vals_pp = ', '.join(['%d (%s)' % (mv, hex(mv)) for mv in masked_vals])
+    if label == key_str:
+        print '  %d (%s) matched %s' % (keycode, hex(keycode), label)
+    elif label is not None:
+        print '* %d (%s) failed, matched key %s (masked vals tried: %s)' % (keycode, hex(keycode), label, masked_vals_pp)
+    else:
+        print '* %d (%s) failed, no match found (masked vals tried: %s)' % (keycode, hex(keycode), masked_vals_pp)
+    #print 'Got:', label
+    #found = False
+    #for k,v in keys.Key.__dict__.iteritems():
+    #    if '__' in k: continue     # Skip __module__, etc.
+    #    num,st = v
+    #    if num == key:
+    #        print 'got code %d = %s' % (num,st)
+    #        found = True
+    #        break
+    #if not found:
+    #    print 'code not found:', key
 
 
     

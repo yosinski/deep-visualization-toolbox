@@ -495,28 +495,29 @@ class LiveVis(object):
         print 'Input thread joined and apps quit; exiting run_loop.'
     
     def handle_key_pre_apps(self, key):
-        if self.bindings.match('freeze_cam', key):
+        tag = self.bindings.get_tag(key)
+        if tag == 'freeze_cam':
             self.input_updater.freeze_cam = not self.input_updater.freeze_cam
-        elif self.bindings.match('toggle_input_mode', key):
+        elif tag == 'toggle_input_mode':
             self.input_updater.toggle_input_mode()
-        elif self.bindings.match('static_file_increment', key):
+        elif tag == 'static_file_increment':
             if self.input_updater.static_file_mode:
                 self.input_updater.increment_static_file_idx(1)
             else:
                 self.input_updater.static_file_mode = True
-        elif self.bindings.match('static_file_decrement', key):
+        elif tag == 'static_file_decrement':
             if self.input_updater.static_file_mode:
                 self.input_updater.increment_static_file_idx(-1)
             else:
                 self.input_updater.static_file_mode = True
-        elif self.bindings.match('help_mode', key):
+        elif tag == 'help_mode':
             self.help_mode = not self.help_mode
-        elif self.bindings.match('stretch_mode', key):
+        elif tag == 'stretch_mode':
             self.input_updater.toggle_stretch_mode()
             print 'Stretch mode is now', self.input_updater.static_file_stretch_mode
             #self.static_file_stretch_mode = not self.static_file_stretch_mode
             #print 'Do something else here???'
-        elif self.bindings.match('debug_level', key):
+        elif tag == 'debug_level':
             self.debug_level = (self.debug_level + 1) % 3
             for app_name, app in self.apps.iteritems():
                 app.set_debug(self.debug_level)
@@ -525,13 +526,22 @@ class LiveVis(object):
         return None, True
 
     def handle_key_post_apps(self, key):
-        if self.bindings.match('quit', key):
+        tag = self.bindings.get_tag(key)
+        if tag == 'quit':
             self.quit = True
             #self.restart_loop = True
         elif key == None:
             pass
         else:
-            print 'Not sure what to do with key', key
+            key_label, masked_vals = self.bindings.get_key_label_from_keycode(key, extra_info = True)
+            masked_vals_pp = ', '.join(['%d (%s)' % (mv, hex(mv)) for mv in masked_vals])
+            if key_label is None:
+                print 'Got key code %d (%s), did not match any known key (masked vals tried: %s)' % (key, hex(key), masked_vals_pp)
+            elif tag is None:
+                print 'Got key code %d (%s), matched key "%s", but key is not bound to any function' % (key, hex(key), key_label)
+            else:
+                print 'Got key code %d (%s), matched key "%s", bound to "%s", but nobody handled "%s"' % (
+                    key, hex(key), key_label, tag, tag)
 
     def display_frame(self, frame):
         frame_disp = cv2.resize(frame[:], self.panes['input'].data.shape[:2][::-1])
