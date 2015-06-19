@@ -276,8 +276,8 @@ def ensure_uint255(arr):
 def ensure_float01(arr, dtype_preference = 'float32'):
     '''If data is uint, convert to float and divide by 255. Else leave at float.'''
     if arr.dtype == 'uint8':
-        print 'extra check...'
-        assert arr.max() <= 256
+        #print 'extra check...'
+        #assert arr.max() <= 256
         return np.array(arr, dtype = dtype_preference) / 255
     elif arr.dtype in ('float32', 'float64'):
         return arr

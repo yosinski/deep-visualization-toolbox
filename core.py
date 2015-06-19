@@ -194,20 +194,6 @@ class InputImageFetcher(CodependentThread):
         with self.lock:
             return (self.latest_frame_idx, self.latest_frame_data)
 
-    def DEP__update_frame(self, frame):
-        if frame is not None:
-            # Display frame in 'input' pane
-            # resize (stretch) to pane size. cv2.resize expects (cols,rows) order
-            with WithTimer('InputImageFetcher.update_frame: resize'):
-                frame_disp = cv2.resize(frame[:], self.panes['input'].data.shape[:2][::-1])
-                #print '  frame      dtype', frame.dtype
-                #print '  frame_disp dtype', frame_disp.dtype
-            self.panes['input'].data[:] = frame_disp
-            print 'InputImageFetcher: updated pane. Redrawing...'
-            with WithTimer('InputImageFetcher.update_frame: render_caller'):
-                self.render_caller.call()
-            print 'InputImageFetcher: redrawing done.'
-
     def increment_static_file_idx(self, amount = 1):
         with self.lock:
             self.static_file_idx_increment += amount
@@ -249,28 +235,6 @@ class InputImageFetcher(CodependentThread):
                 self.latest_static_frame = im
             self._increment_and_set_frame(self.latest_static_frame, False)
 
-
-class ThreadsafeCaller(object):
-    def __init__(self):
-        self.lock = Lock()
-
-    def call(self, function, *args, **kwargs):
-        with self.lock:
-            function(*args, **kwargs)
-
-
-
-class ThreadsafeBoundCaller(object):
-    def __init__(self, function, *args, **kwargs):
-        self.lock = Lock()
-        self.function = function
-        self.args = args
-        self.kwargs = kwargs
-
-    def call(self):
-        with self.lock:
-            self.function(*(self.args), **(self.kwargs))
-                
 
 
 class LiveVis(object):
@@ -492,7 +456,7 @@ class LiveVis(object):
             # Extra sleep for debugging. In production all main loop sleep should be in cv2.waitKey.
             #time.sleep(2)
 
-        print 'Trying to exit run_loop...'
+        print '\n\nTrying to exit run_loop...'
         self.input_updater.quit = True
         self.input_updater.join(.01 + float(self.settings.input_updater_sleep_after_read_frame) * 5)
         if self.input_updater.is_alive():
