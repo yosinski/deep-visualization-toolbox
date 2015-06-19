@@ -46,5 +46,6 @@ if [ "$1" = "all" ]; then
     fetch_and_extract http://c.yosinski.com/ caffenet-yos_max_im_fc6_fc7.tar.gz   unit_jpg_vis max_im/fc6/fc6_0000.jpg
     fetch_and_extract http://c.yosinski.com/ caffenet-yos_max_deconv_fc6_fc7.tar.gz unit_jpg_vis max_deconv/fc6/fc6_0000.jpg
 else
+    echo
     echo "Rerun as \"$0 all\" to also fetch fc6 and fc7 unit visualizations (Warning: 4.5G more)"
 fi
