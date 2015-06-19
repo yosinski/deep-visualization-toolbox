@@ -83,6 +83,7 @@ class InputImageFetcher(CodependentThread):
         
         # Cam input
         self.capture_device = settings.input_updater_capture_device
+        self.no_cam_present = (self.capture_device is None)     # Disable all cam functionality
         self.bound_cap_device = None
         self.sleep_after_read_frame = settings.input_updater_sleep_after_read_frame
         self.latest_cam_frame = None
@@ -96,16 +97,26 @@ class InputImageFetcher(CodependentThread):
         
     def bind_camera(self):
         # Due to OpenCV limitations, this should be called from the main thread
-        print 'InputImageFetcher: binding camera'
-        self.bound_cap_device = cv2.VideoCapture(self.capture_device)
-        print 'InputImageFetcher: camera bound'
+        print 'InputImageFetcher: bind_camera starting'
+        if self.no_cam_present:
+            print 'InputImageFetcher: skipping camera bind (device: None)'
+        else:
+            self.bound_cap_device = cv2.VideoCapture(self.capture_device)
+            if self.bound_cap_device.isOpened():
+                print 'InputImageFetcher: capture device %s is open' % self.capture_device
+            else:
+                print 'InputImageFetcher: capture device %s failed to open! Camera will not be available!\n\n' % self.capture_device
+        print 'InputImageFetcher: bind_camera finished'
 
     def free_camera(self):
         # Due to OpenCV limitations, this should be called from the main thread
-        print 'InputImageFetcher: freeing camera'
-        del self.bound_cap_device  # free the camera
-        self.bound_cap_device = None
-        print 'InputImageFetcher: camera freed'
+        if self.no_cam_present:
+            print 'InputImageFetcher: skipping camera free (device: None)'
+        else:
+            print 'InputImageFetcher: freeing camera'
+            del self.bound_cap_device  # free the camera
+            self.bound_cap_device = None
+            print 'InputImageFetcher: camera freed'
 
     def set_mode_static(self):
         with self.lock:
@@ -113,8 +124,11 @@ class InputImageFetcher(CodependentThread):
         
     def set_mode_cam(self):
         with self.lock:
-            self.static_file_mode = False
-            assert self.bound_cap_device != None, 'Call bind_camera first'
+            if self.no_cam_present:
+                print 'WARNING: ignoring set_mode_cam, no cam present'
+            else:
+                self.static_file_mode = False
+                assert self.bound_cap_device != None, 'Call bind_camera first'
         
     def toggle_input_mode(self):
         with self.lock:
