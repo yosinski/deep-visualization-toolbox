@@ -28,8 +28,14 @@ img = cv2.imread('input_images/ILSVRC2012_val_00000610.jpg')    # load example i
 def check_key(key_str):
     print '  Press key %5s: ' % key_str,
     sys.stdout.flush()
-    keycode = cv2.waitKey(0)
-    label, masked_vals = bindings.get_key_label_from_keycode(keycode, extra_info = True)
+    while True:
+        keycode = cv2.waitKey(0)
+        label, masked_vals = bindings.get_key_label_from_keycode(keycode, extra_info = True)
+        if 'shift' in label or 'ctrl' in label:
+            print '(ignoring modifier %s)' % label,
+            sys.stdout.flush()
+        else:
+            break
     masked_vals_pp = ', '.join(['%d (%s)' % (mv, hex(mv)) for mv in masked_vals])
     if label == key_str:
         print '  %d (%s) matched %s' % (keycode, hex(keycode), label)
