@@ -273,7 +273,7 @@ class JPGVisLoadingThread(CodependentThread):
                 img_resize = ensure_uint255_and_resize_to_fit(img_stacked, data_shape)
                 #print 'Resized:', img_resize.shape
             else:
-                img_resize = 'not_found'
+                img_resize = np.zeros(shape=(0,))   # Sentinal value when image is not found.
                 
             self.cache.set(jpgvis_to_load_key, img_resize)
 
@@ -1036,8 +1036,10 @@ class CaffeVisApp(BaseApp):
                 with self.state.lock:
                     self.state.jpgvis_to_load_key = img_key
                 pane.data[:] = to_255(self.settings.stale_background)
-            elif img_resize == 'not_found':
-                # If img_resize is 'not_found', loading was already attempted but no jpg assets were found. Just display disabled.
+            elif img_resize.nbytes == 0:
+                # This is the sentinal value when the image is not
+                # found, i.e. loading was already attempted but no jpg
+                # assets were found. Just display disabled.
                 pane.data[:] = to_255(self.settings.window_background)
             else:
                 # Show image
