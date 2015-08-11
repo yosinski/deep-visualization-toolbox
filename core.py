@@ -463,7 +463,6 @@ class LiveVis(object):
         tag = self.bindings.get_tag(key)
         if tag == 'quit':
             self.quit = True
-            #self.restart_loop = True
         elif key == None:
             pass
         else:

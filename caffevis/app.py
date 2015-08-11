@@ -175,8 +175,8 @@ class JPGVisLoadingThread(CodependentThread):
             # Load three images:
             images = [None] * 3
 
-            # Reize each component images only using one direction as
-            # a constraint. This is straightfowrad but could be very
+            # Resize each component images only using one direction as
+            # a constraint. This is straightforward but could be very
             # wasteful (making an image much larger then much smaller)
             # if the proportions of the stacked image are very
             # different from the proportions of the data pane.
@@ -618,8 +618,6 @@ class CaffeVisApp(BaseApp):
             if self.debug_level > 1:
                 print 'CaffeVisApp.draw: drawing'
 
-            #if 'input' in panes:
-            #    self._draw_input_pane(panes['input'])
             if 'caffevis_control' in panes:
                 self._draw_control_pane(panes['caffevis_control'])
             if 'caffevis_status' in panes:
@@ -813,13 +811,13 @@ class CaffeVisApp(BaseApp):
         # Convert to float if necessary:
         display_3D = ensure_float01(display_3D)
         # Upsample gray -> color if necessary
-        #   (1000,32,32) -> (1000,32,32,3)
+        #   e.g. (1000,32,32) -> (1000,32,32,3)
         if len(display_3D.shape) == 3:
             display_3D = display_3D[:,:,:,np.newaxis]
         if display_3D.shape[3] == 1:
             display_3D = np.tile(display_3D, (1, 1, 1, 3))
         # Upsample unit length tiles to give a more sane tile / highlight ratio
-        #   (1000,1,1,3) -> (1000,3,3,3)
+        #   e.g. (1000,1,1,3) -> (1000,3,3,3)
         if display_3D.shape[1] == 1:
             display_3D = np.tile(display_3D, (1, 3, 3, 1))
         if self.state.layers_show_back and not self.state.pattern_mode:
@@ -849,14 +847,14 @@ class CaffeVisApp(BaseApp):
         state_layers_pane_zoom_mode = self.state.layers_pane_zoom_mode
         assert state_layers_pane_zoom_mode in (0,1,2)
         if state_layers_pane_zoom_mode == 0:
-            # Mode 0: base case
+            # Mode 0: normal display (activations or patterns)
             display_2D_resize = ensure_uint255_and_resize_to_fit(display_2D, pane.data.shape)
         elif state_layers_pane_zoom_mode == 1:
             # Mode 1: zoomed selection
             unit_data = display_3D_highres[self.state.selected_unit]
             display_2D_resize = ensure_uint255_and_resize_to_fit(unit_data, pane.data.shape)
         else:
-            # Mode 2: ??? backprop ???
+            # Mode 2: zoomed backprop pane
             display_2D_resize = ensure_uint255_and_resize_to_fit(display_2D, pane.data.shape) * 0
         
         pane.data[0:display_2D_resize.shape[0], 0:display_2D_resize.shape[1], :] = display_2D_resize
