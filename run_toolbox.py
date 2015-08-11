@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 
 import os
-from core import LiveVis
+from live_vis import LiveVis
 from bindings import bindings
 try:
     import settings

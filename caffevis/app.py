@@ -12,7 +12,7 @@ from threading import Lock
 from misc import WithTimer
 from numpy_cache import FIFOLimitedArrayCache
 from app_base import BaseApp
-from core import CodependentThread
+from live_vis import CodependentThread
 from image_misc import norm01, norm01c, norm0255, tile_images_normalize, ensure_float01, tile_images_make_tiles, ensure_uint255_and_resize_to_fit, caffe_load_image, get_tiles_height_width, get_tiles_height_width_ratio
 from image_misc import FormattedString, cv2_typeset_text, to_255
 
