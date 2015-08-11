@@ -75,6 +75,11 @@ Once the toolbox is running, push 'h' to show a help screen. You can also have a
 
 
 
-## Troubleshooting
+# Troubleshooting
 
-If you have any problems getting the code running, please feel free to [email me](http://yosinski.com/) or [submit an issue](https://github.com/yosinski/deep-visualization-toolbox/issues). I might have left out an important detail here or there :).
+If you have any problems getting the code running, here are a few things to try:
+
+ * Try using the `dev` branch instead. Sometimes it's a little more up to date than the master branch.
+ * If you get an error (`AttributeError: 'Classifier' object has no attribute 'backward_from_layer'`) when switching to backprop or deconv modes, it's because your compiled branch of Caffe does not have the necessary Python bindings. Follow the directions in "Step 1: Compile the deconv-deep-vis-toolbox branch of caffe" above.
+ * If backprop and deconv run but produce all zeros, you probably need to add "force_backward: true" to your network prototxt. By default, Caffe won't compute derivatives at the data layer, because they're not needed to update parameters. Just add the line to your prototxt and it should work.
+ * If none of that helps, feel free to [email me](http://yosinski.com/) or [submit an issue](https://github.com/yosinski/deep-visualization-toolbox/issues). I might have left out an important detail here or there :).
