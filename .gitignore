@@ -1,3 +1,4 @@
 settings.py
+settings.py.templatec
 *.pyc
 *.DS_Store
