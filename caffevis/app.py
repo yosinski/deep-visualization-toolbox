@@ -957,7 +957,11 @@ class CaffeVisApp(BaseApp):
             raise
             
         if self.settings.caffevis_jpgvis_layers and state_layer in self.settings.caffevis_jpgvis_layers and cursor_area == 'bottom' and show_unit_jpgs:
-            img_key = (state_layer, state_selected_unit, pane.data.shape)
+            if self.settings.caffevis_jpgvis_remap and state_layer in self.settings.caffevis_jpgvis_remap:
+                img_key_layer = self.settings.caffevis_jpgvis_remap[state_layer]
+            else:
+                img_key_layer = state_layer
+            img_key = (img_key_layer, state_selected_unit, pane.data.shape)
             img_resize = self.img_cache.get(img_key, None)
             if img_resize is None:
                 # If img_resize is None, loading has not yet been attempted, so show stale image and request load by JPGVisLoadingThread

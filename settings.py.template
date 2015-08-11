@@ -70,10 +70,11 @@ caffevis_network_weights = root_dir + '/models/caffenet-yos/caffenet-yos-weights
 caffevis_data_mean       = root_dir + '/models/caffenet-yos/ilsvrc_2012_mean.npy'
 caffevis_labels          = root_dir + '/models/caffenet-yos/ilsvrc_2012_labels.txt'
 caffevis_unit_jpg_dir    = root_dir + '/models/caffenet-yos/unit_jpg_vis'
-caffevis_jpgvis_layers   = ['conv1', 'conv2', 'conv3', 'conv4', 'conv5', 'fc6', 'fc7', 'fc8', 'prob']
+caffevis_jpgvis_layers   = ['conv1', 'pool1', 'conv2', 'pool2', 'conv3', 'conv4', 'conv5', 'pool5', 'fc6', 'fc7', 'fc8', 'prob']
+caffevis_jpgvis_remap    = {'pool1': 'conv1', 'pool2': 'conv2', 'pool5': 'conv5'}
+caffevis_label_layers    = ('fc8', 'prob')
 
 caffevis_data_hw         = (227,227)
-caffevis_label_layers    = ('fc8', 'prob')
 caffevis_mode_gpu        = False
 caffevis_pause_after_keys = .10     # Pause Caffe forward/backward computation for this many seconds after a keypress. This is to keep the processor free for a brief period after a keypress, which allow the interface to feel much more responsive. After this period has passed, Caffe resumes computation, in CPU mode often occupying all cores. Default: .1
 caffevis_frame_wait_sleep = .01
