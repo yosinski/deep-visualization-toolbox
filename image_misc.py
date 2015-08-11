@@ -43,17 +43,30 @@ def cv2_read_cap_rgb(cap, saveto = None):
     rval, frame = cap.read()
     if saveto:
         cv2.imwrite(saveto, frame)
+    if len(frame.shape) == 2:
+        # Upconvert single channel grayscale to color
+        frame = frame[:,:,np.newaxis]
+    if frame.shape[2] == 1:
+        frame = np.tile(frame, (1,1,3))
+    if frame.shape[2] > 3:
+        # Chop off transparency
+        frame = frame[:,:,:3]
     frame = frame[:,:,::-1]   # Convert native OpenCV BGR -> RGB
     return frame
 
     
 def cv2_read_file_rgb(filename):
+    '''Reads an image from file. Always returns (x,y,3)'''
     im = cv2.imread(filename)
     if len(im.shape) == 2:
         # Upconvert single channel grayscale to color
-        im = np.tile(im[:,:,np.newaxis], (1,1,3))
-    else:
-        im = im[:,:,::-1]   # Convert native OpenCV BGR -> RGB
+        im = im[:,:,np.newaxis]
+    if im.shape[2] == 1:
+        im = np.tile(im, (1,1,3))
+    if im.shape[2] > 3:
+        # Chop off transparency
+        im = im[:,:,:3]
+    im = im[:,:,::-1]   # Convert native OpenCV BGR -> RGB
     return im
 
     
@@ -63,9 +76,6 @@ def read_cam_frame(cap, saveto = None):
     frame = frame[:,::-1,:]  # flip L-R for display
     frame -= frame.min()
     frame *= (255.0 / (frame.max() + 1e-6))
-    if len(frame.shape) == 2:
-        # Upconvert single channel grayscale to color
-        frame = np.tile(frame[:,:,np.newaxis], (1,1,3))
     return frame
 
 def crop_to_square(frame):
