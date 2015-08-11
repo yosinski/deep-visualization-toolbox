@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 
+import os
 from core import LiveVis
 from bindings import bindings
 try:
