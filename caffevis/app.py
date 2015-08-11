@@ -25,16 +25,8 @@ def net_preproc_forward(net, img):
     output = net.forward(data=data_blob)
     return output
 
-layer_renames = {
-    'pool1': 'p1',
-    'norm1': 'n1',
-    'pool2': 'p2',
-    'norm2': 'n2',
-    'pool5': 'p5',
-    }
-    
-def get_pp_layer_name(layer_name):
-    return layer_renames.get(layer_name, layer_name)
+def get_pretty_layer_name(settings, layer_name):
+    return settings.caffevis_layer_pretty_names.get(layer_name, layer_name)
 
 def read_label_file(filename):
     ret = []
@@ -544,7 +536,7 @@ class CaffeVisApp(BaseApp):
     def start(self):
         self.state = CaffeVisAppState(self.net, self.settings, self.bindings)
         self.state.drawing_stale = True
-        self.layer_print_names = [get_pp_layer_name(nn) for nn in self.state._layers]
+        self.layer_print_names = [get_pretty_layer_name(self.settings, nn) for nn in self.state._layers]
 
         if self.proc_thread is None or not self.proc_thread.is_alive():
             # Start thread if it's not already running
@@ -908,10 +900,6 @@ class CaffeVisApp(BaseApp):
             # One of the backprop modes is enabled and the back computation (gradient or deconv) is up to date
             
             grad_blob = self.net.blobs['data'].diff
-
-            #print '****grad_blob min,max =', grad_blob.min(), grad_blob.max()
-            #c1diff = self.net.blobs['conv1'].diff
-            #print '****conv1diff min,max =', c1diff.min(), c1diff.max()
 
             # Manually deprocess (skip mean subtraction and rescaling)
             #grad_img = self.net.deprocess('data', diff_blob)

@@ -73,6 +73,13 @@ caffevis_unit_jpg_dir    = root_dir + '/models/caffenet-yos/unit_jpg_vis'
 caffevis_jpgvis_layers   = ['conv1', 'pool1', 'conv2', 'pool2', 'conv3', 'conv4', 'conv5', 'pool5', 'fc6', 'fc7', 'fc8', 'prob']
 caffevis_jpgvis_remap    = {'pool1': 'conv1', 'pool2': 'conv2', 'pool5': 'conv5'}
 caffevis_label_layers    = ('fc8', 'prob')
+caffevis_layer_pretty_names = {
+    'pool1': 'p1',
+    'norm1': 'n1',
+    'pool2': 'p2',
+    'norm2': 'n2',
+    'pool5': 'p5',
+}
 
 caffevis_data_hw         = (227,227)
 caffevis_mode_gpu        = False
