@@ -8,13 +8,11 @@ import skimage.io
 from misc import WithTimer
 
 
-
 def norm01(arr):
     arr = arr.copy()
     arr -= arr.min()
     arr /= arr.max() + 1e-10
     return arr
-
 
 
 def norm01c(arr, center):
@@ -28,7 +26,6 @@ def norm01c(arr, center):
     return arr
 
 
-
 def norm0255(arr):
     '''Maps the input range to [0,255] as dtype uint8'''
     arr = arr.copy()
@@ -36,7 +33,6 @@ def norm0255(arr):
     arr *= 255.0 / (arr.max() + 1e-10)
     arr = np.array(arr, 'uint8')
     return arr
-
 
 
 def cv2_read_cap_rgb(cap, saveto = None):
@@ -78,6 +74,7 @@ def read_cam_frame(cap, saveto = None):
     frame *= (255.0 / (frame.max() + 1e-6))
     return frame
 
+
 def crop_to_square(frame):
     i_size,j_size = frame.shape[0],frame.shape[1]
     if j_size > i_size:
@@ -88,6 +85,7 @@ def crop_to_square(frame):
         # portrait
         offset = (i_size - j_size) / 2
         return frame[offset:offset+j_size,:,:]
+
 
 def cv2_imshow_rgb(window_name, img):
     # Convert native OpenCV BGR -> RGB before displaying
@@ -124,6 +122,7 @@ def caffe_load_image(filename, color=True, as_uint=False):
         img = img[:, :, :3]
     return img
 
+
 def get_tiles_height_width(n_tiles, desired_width = None):
     '''Get a height x width size that will fit n_tiles tiles.'''
     if desired_width == None:
@@ -136,11 +135,13 @@ def get_tiles_height_width(n_tiles, desired_width = None):
         height = int(np.ceil(float(n_tiles) / width))
     return height,width
         
+
 def get_tiles_height_width_ratio(n_tiles, width_ratio = 1.0):
     '''Get a height x width size that will fit n_tiles tiles.'''
     width = int(np.ceil(np.sqrt(n_tiles * width_ratio)))
     return get_tiles_height_width(n_tiles, desired_width = width)
         
+
 def tile_images_normalize(data, c01 = False, boost_indiv = 0.0,  boost_gamma = 1.0, single_tile = False, scale_range = 1.0, neg_pos_colors = None):
     data = data.copy()
     if single_tile:
@@ -187,6 +188,7 @@ def tile_images_normalize(data, c01 = False, boost_indiv = 0.0,  boost_gamma = 1
         data = np.tile(data[:,:,:,np.newaxis], 3)
 
     return data
+
 
 def tile_images_make_tiles(data, padsize=1, padval=0, hw=None, highlights = None):
     if hw:
@@ -251,6 +253,7 @@ def tile_images_make_tiles(data, padsize=1, padval=0, hw=None, highlights = None
     
     return (height,width), data
 
+
 def to_255(vals_01):
     '''Convert vals in [0,1] to [0,255]'''
     try:
@@ -263,6 +266,7 @@ def to_255(vals_01):
         # Not iterable (single int or float)
         return vals_01*255
 
+
 def ensure_uint255_and_resize_to_fit(img, out_max_shape,
                                      shrink_interpolation = cv2.INTER_LINEAR,
                                      grow_interpolation = cv2.INTER_NEAREST):
@@ -271,6 +275,7 @@ def ensure_uint255_and_resize_to_fit(img, out_max_shape,
                          dtype_out = 'uint8',
                          shrink_interpolation = shrink_interpolation,
                          grow_interpolation = grow_interpolation)
+
 
 def ensure_uint255(arr):
     '''If data is float, multiply by 255 and convert to uint8. Else leave as uint8.'''
@@ -283,6 +288,7 @@ def ensure_uint255(arr):
     else:
         raise Exception('ensure_uint255 expects uint8 or float input but got %s with range [%g,%g,].' % (arr.dtype, arr.min(), arr.max()))
 
+
 def ensure_float01(arr, dtype_preference = 'float32'):
     '''If data is uint, convert to float and divide by 255. Else leave at float.'''
     if arr.dtype == 'uint8':
@@ -293,6 +299,7 @@ def ensure_float01(arr, dtype_preference = 'float32'):
         return arr
     else:
         raise Exception('ensure_float01 expects uint8 or float input but got %s with range [%g,%g,].' % (arr.dtype, arr.min(), arr.max()))
+
 
 def resize_to_fit(img, out_max_shape,
                   dtype_out = None,
@@ -353,6 +360,7 @@ def resize_to_fit(img, out_max_shape,
         out = np.array(out, dtype=dtype_out)
     return out
 
+
 class FormattedString(object):
     def __init__(self, string, defaults, face=None, fsize=None, clr=None, thick=None, align=None, width=None):
         self.string = string
@@ -363,6 +371,7 @@ class FormattedString(object):
         self.width = width # if None: calculate width automatically
         self.align = align if align else defaults.get('align', 'left')
         
+
 def cv2_typeset_text(data, lines, loc, between = ' ', string_spacing = 0, line_spacing = 0):
     '''Typesets mutliple strings on multiple lines of text, where each string may have its own formatting.
 
