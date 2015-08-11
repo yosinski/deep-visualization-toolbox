@@ -13,6 +13,9 @@ except:
     print '  $ < edit settings.py >\n'
     raise
 
+if not os.path.exists(settings.caffevis_caffe_root):
+    raise Exception('ERROR: Set caffevis_caffe_root in settings.py first.')
+
 
 
 def main():
