@@ -107,11 +107,19 @@ class CaffeProcThread(CodependentThread):
                 if back_mode == 'grad':
                     with WithTimer('CaffeProcThread:backward', quiet = self.debug_level < 1):
                         #print '**** Doing backprop with %s diffs in [%s,%s]' % (backprop_layer, diffs.min(), diffs.max())
-                        self.net.backward_from_layer(backprop_layer, diffs, zero_higher = True)
+                        try:
+                            self.net.backward_from_layer(backprop_layer, diffs, zero_higher = True)
+                        except AttributeError:
+                            print 'ERROR: required bindings (backward_from_layer) not found! Try using the deconv-deep-vis-toolbox branch as described here: https://github.com/yosinski/deep-visualization-toolbox'
+                            raise
                 else:
                     with WithTimer('CaffeProcThread:deconv', quiet = self.debug_level < 1):
                         #print '**** Doing deconv with %s diffs in [%s,%s]' % (backprop_layer, diffs.min(), diffs.max())
-                        self.net.deconv_from_layer(backprop_layer, diffs, zero_higher = True)
+                        try:
+                            self.net.deconv_from_layer(backprop_layer, diffs, zero_higher = True)
+                        except AttributeError:
+                            print 'ERROR: required bindings (deconv_from_layer) not found! Try using the deconv-deep-vis-toolbox branch as described here: https://github.com/yosinski/deep-visualization-toolbox'
+                            raise
 
                 with self.state.lock:
                     self.state.back_stale = False
