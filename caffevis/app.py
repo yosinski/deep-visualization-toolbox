@@ -13,7 +13,7 @@ from misc import WithTimer
 from numpy_cache import FIFOLimitedArrayCache
 from app_base import BaseApp
 from core import CodependentThread
-from image_misc import norm01, norm01c, norm0255, tile_images_normalize, ensure_float01, tile_images_make_tiles, ensure_uint255_and_resize_to_fit, caffe_load_image, get_tiles_height_width
+from image_misc import norm01, norm01c, norm0255, tile_images_normalize, ensure_float01, tile_images_make_tiles, ensure_uint255_and_resize_to_fit, caffe_load_image, get_tiles_height_width, get_tiles_height_width_ratio
 from image_misc import FormattedString, cv2_typeset_text, to_255
 
 
@@ -241,18 +241,16 @@ class JPGVisLoadingThread(CodependentThread):
 class CaffeVisAppState(object):
     '''State of CaffeVis app.'''
 
-    def __init__(self, net, settings, bindings):
+    def __init__(self, net, settings, bindings, net_layer_info):
         self.lock = Lock()  # State is accessed in multiple threads
         self.settings = settings
         self.bindings = bindings
         self._layers = net.blobs.keys()
         self._layers = self._layers[1:]  # chop off data layer
+        self.net_layer_info = net_layer_info
         self.layer_boost_indiv_choices = self.settings.caffevis_boost_indiv_choices   # 0-1, 0 is noop
         self.layer_boost_gamma_choices = self.settings.caffevis_boost_gamma_choices   # 0-inf, 1 is noop
         self.caffe_net_state = 'free'     # 'free', 'proc', or 'draw'
-        # Which layer and unit (or channel) to use for backprop
-        self.tiles_height_width = (1,1)   # Before any update
-        self.tiles_number = 1
         self.extra_msg = ''
         self.back_stale = True       # back becomes stale whenever the last back diffs were not computed using the current backprop unit and method (bprop or deconv)
         self.next_frame = None
@@ -271,6 +269,7 @@ class CaffeVisAppState(object):
         self.layer_boost_gamma = self.layer_boost_gamma_choices[self.layer_boost_gamma_idx]
         self.cursor_area = 'top'   # 'top' or 'bottom'
         self.selected_unit = 0
+        # Which layer and unit (or channel) to use for backprop
         self.backprop_layer = self.layer
         self.backprop_unit = self.selected_unit
         self.backprop_selection_frozen = False    # If false, backprop unit tracks selected unit
@@ -303,14 +302,12 @@ class CaffeVisAppState(object):
                 #self.cursor_area = 'top' # Then to the control pane
                 self.layer_idx = max(0, self.layer_idx - 1)
                 self.layer = self._layers[self.layer_idx]
-                self._ensure_valid_selected()
             elif tag == 'sel_layer_right':
                 #hh,ww = self.tiles_height_width
                 #self.selected_unit = self.selected_unit % ww   # equivalent to scrolling all the way to the top row
                 #self.cursor_area = 'top' # Then to the control pane
                 self.layer_idx = min(len(self._layers) - 1, self.layer_idx + 1)
                 self.layer = self._layers[self.layer_idx]
-                self._ensure_valid_selected()
 
             elif tag == 'sel_left':
                 self.move_selection('left')
@@ -406,12 +403,7 @@ class CaffeVisAppState(object):
             else:
                 key_handled = False
 
-            if not self.backprop_selection_frozen:
-                # If backprop_selection is not frozen, backprop layer/unit follows selected unit
-                if not (self.backprop_layer == self.layer and self.backprop_unit == self.selected_unit):
-                    self.backprop_layer = self.layer
-                    self.backprop_unit = self.selected_unit
-                    self.back_stale = True    # If there is any change, back diffs are now stale
+            self._ensure_valid_selected()
 
             self.drawing_stale = key_handled   # Request redraw any time we handled the key
 
@@ -422,7 +414,6 @@ class CaffeVisAppState(object):
             return self.drawing_stale
 
     def move_selection(self, direction, dist = 1):
-        hh,ww = self.tiles_height_width
         if direction == 'left':
             if self.cursor_area == 'top':
                 self.layer_idx = max(0, self.layer_idx - dist)
@@ -439,33 +430,30 @@ class CaffeVisAppState(object):
             if self.cursor_area == 'top':
                 self.cursor_area = 'bottom'
             else:
-                self.selected_unit += ww * dist
+                self.selected_unit += self.net_layer_info[self.layer]['tile_cols'] * dist
         elif direction == 'up':
             if self.cursor_area == 'top':
                 pass
             else:
-                self.selected_unit -= ww * dist
+                self.selected_unit -= self.net_layer_info[self.layer]['tile_cols'] * dist
                 if self.selected_unit < 0:
-                    self.selected_unit += ww
+                    self.selected_unit += self.net_layer_info[self.layer]['tile_cols']
                     self.cursor_area = 'top'
-        self._ensure_valid_selected()
 
-    def update_tiles_height_width(self, height_width, n_valid):
-        '''Update the height x width of the tiles currently
-        displayed. Ensures (a) that a valid tile is selected and (b)
-        that up/down/left/right motion works as expected. n_valid may
-        be less than prod(height_width).
-        '''
-
-        assert len(height_width) == 2, 'give as (hh,ww) tuple'
-        self.tiles_height_width = height_width
-        self.tiles_number = n_valid
-        # If the number of tiles has shrunk, the selection may now be invalid
-        self._ensure_valid_selected()
-        
     def _ensure_valid_selected(self):
+        n_tiles = self.net_layer_info[self.layer]['n_tiles']
+
+        # Forward selection
         self.selected_unit = max(0, self.selected_unit)
-        self.selected_unit = min(self.tiles_number-1, self.selected_unit)
+        self.selected_unit = min(n_tiles-1, self.selected_unit)
+
+        # Backward selection
+        if not self.backprop_selection_frozen:
+            # If backprop_selection is not frozen, backprop layer/unit follows selected unit
+            if not (self.backprop_layer == self.layer and self.backprop_unit == self.selected_unit):
+                self.backprop_layer = self.layer
+                self.backprop_unit = self.selected_unit
+                self.back_stale = True    # If there is any change, back diffs are now stale
 
 
 
@@ -532,9 +520,30 @@ class CaffeVisApp(BaseApp):
         if settings.caffevis_jpg_cache_size < 10*1024**2:
             raise Exception('caffevis_jpg_cache_size must be at least 10MB for normal operation.')
         self.img_cache = FIFOLimitedArrayCache(settings.caffevis_jpg_cache_size)
+
+        self._populate_net_layer_info()
+
+    def _populate_net_layer_info(self):
+        '''For each layer, save the number of filters and precompute
+        tile arrangement (needed by CaffeVisAppState to handle
+        keyboard navigation).
+        '''
+        self.net_layer_info = {}
+        for key in self.net.blobs.keys():
+            self.net_layer_info[key] = {}
+            # Conv example: (1, 96, 55, 55)
+            # FC example: (1, 1000)
+            blob_shape = self.net.blobs[key].data.shape
+            assert len(blob_shape) in (2,4), 'Expected either 2 for FC or 4 for conv layer'
+            self.net_layer_info[key]['isconv'] = (len(blob_shape) == 4)
+            self.net_layer_info[key]['data_shape'] = blob_shape[1:]  # Chop off batch size
+            self.net_layer_info[key]['n_tiles'] = blob_shape[1]
+            self.net_layer_info[key]['tiles_rc'] = get_tiles_height_width_ratio(blob_shape[1], self.settings.caffevis_layers_ratio)
+            self.net_layer_info[key]['tile_rows'] = self.net_layer_info[key]['tiles_rc'][0]
+            self.net_layer_info[key]['tile_cols'] = self.net_layer_info[key]['tiles_rc'][1]
         
     def start(self):
-        self.state = CaffeVisAppState(self.net, self.settings, self.bindings)
+        self.state = CaffeVisAppState(self.net, self.settings, self.bindings, self.net_layer_info)
         self.state.drawing_stale = True
         self.layer_print_names = [get_pretty_layer_name(self.settings, nn) for nn in self.state._layers]
 
@@ -741,7 +750,7 @@ class CaffeVisApp(BaseApp):
             layer_dat_3D = layer_dat_3D[:,np.newaxis,np.newaxis]
 
         n_tiles = layer_dat_3D.shape[0]
-        tile_rows,tile_cols = get_tiles_height_width(n_tiles)
+        tile_rows,tile_cols = self.net_layer_info[self.state.layer]['tiles_rc']
 
         display_3D_highres = None
         if self.state.pattern_mode:
@@ -756,7 +765,7 @@ class CaffeVisApp(BaseApp):
             if display_3D_highres is None:
                 try:
                     with WithTimer('CaffeVisApp:load_sprite_image', quiet = self.debug_level < 1):
-                        display_3D_highres = load_sprite_image(jpg_path, (tile_rows, tile_cols), n_sprites = n_tiles)
+                        display_3D_highres = load_square_sprite_image(jpg_path, n_sprites = n_tiles)
                 except IOError:
                     # File does not exist, so just display disabled.
                     pass
@@ -816,12 +825,7 @@ class CaffeVisApp(BaseApp):
             padval = self.settings.caffevis_layer_clr_back_background
         else:
             padval = self.settings.window_background
-        # Tell the state about the updated (height,width) tile display (ensures valid selection)
-        self.state.update_tiles_height_width((tile_rows,tile_cols), display_3D.shape[0])
 
-        #if self.state.layers_show_back:
-        #    highlights = [(.5, .5, 1)] * n_tiles
-        #else:
         highlights = [None] * n_tiles
         with self.state.lock:
             if self.state.cursor_area == 'bottom':
@@ -829,8 +833,7 @@ class CaffeVisApp(BaseApp):
             if self.state.backprop_selection_frozen and self.state.layer == self.state.backprop_layer:
                 highlights[self.state.backprop_unit] = self.settings.caffevis_layer_clr_back_sel  # in [0,1] range
 
-        _, display_2D = tile_images_make_tiles(display_3D, padval = padval, highlights = highlights)
-        #print ' ===tile_conv dtype', tile_conv.dtype, 'range', tile_conv.min(), tile_conv.max()
+        _, display_2D = tile_images_make_tiles(display_3D, hw = (tile_rows,tile_cols), padval = padval, highlights = highlights)
 
         if display_3D_highres is None:
             display_3D_highres = display_3D
@@ -848,7 +851,8 @@ class CaffeVisApp(BaseApp):
         else:
             # Mode 2: zoomed backprop pane
             display_2D_resize = ensure_uint255_and_resize_to_fit(display_2D, pane.data.shape) * 0
-        
+
+        pane.data[:] = to_255(self.settings.window_background)
         pane.data[0:display_2D_resize.shape[0], 0:display_2D_resize.shape[1], :] = display_2D_resize
         
         if self.settings.caffevis_label_layers and self.state.layer in self.settings.caffevis_label_layers and self.labels and self.state.cursor_area == 'bottom':
@@ -1047,10 +1051,12 @@ def crop_to_corner(img, corner, small_padding = 1, large_padding = 2):
 
 
 def load_sprite_image(img_path, rows_cols, n_sprites = None):
-    '''Load a 2D sprite image where (rows,cols) = rows_cols. Sprite
-    shape is computed automatically. If n_sprites is not given, it is
-    assumed to be rows*cols. Return as 3D tensor with shape
-    (n_sprites, sprite_height, sprite_width, sprite_channels).
+    '''Load a 2D (3D with color channels) sprite image where
+    (rows,cols) = rows_cols, slices, and returns as a 3D tensor (4D
+    with color channels). Sprite shape is computed automatically. If
+    n_sprites is not given, it is assumed to be rows*cols. Return as
+    3D tensor with shape (n_sprites, sprite_height, sprite_width,
+    sprite_channels).
     '''
 
     rows,cols = rows_cols
@@ -1071,3 +1077,13 @@ def load_sprite_image(img_path, rows_cols, n_sprites = None):
         ret[idx] = img[ii*sprite_height:(ii+1)*sprite_height,
                        jj*sprite_width:(jj+1)*sprite_width, :]
     return ret
+
+
+
+def load_square_sprite_image(img_path, n_sprites):
+    '''
+    Just like load_sprite_image but assumes tiled image is square
+    '''
+    
+    tile_rows,tile_cols = get_tiles_height_width(n_sprites)
+    return load_sprite_image(img_path, (tile_rows, tile_cols), n_sprites = n_sprites)

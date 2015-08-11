@@ -114,21 +114,16 @@ def get_tiles_height_width(n_tiles, desired_width = None):
         width = int(np.ceil(np.sqrt(n_tiles)))
         height = width
     else:
-        assert isinstance(width, int)
+        assert isinstance(desired_width, int)
+        width = desired_width
         height = int(np.ceil(float(n_tiles) / width))
     return height,width
         
-def tile_images(data, padsize = 1, padval = 0, c01 = False, width = None, boost_indiv = 0.0, boost_gamma = 1.0, highlights = None, single_tile = False):
-    '''take an array of shape (n, height, width) or (n, height, width, channels)
-    and visualize each (height, width) thing in a grid. If width = None, produce
-    a square image of size approx. sqrt(n) by sqrt(n), else calculate height given width value.
-    
-    If highlights is given, it should be a list of length data.shape[0] with each element a color triple or None'''
-    
-    data = tile_images_normalize(data, c01 = c01, boost_indiv = boost_indiv,  boost_gamma = boost_gamma, single_tile = single_tile)
-    (height,width), data = tile_images_make_tiles(data, padsize = padsize, padval = padval, width = width, highlights = highlights)
-    return (height,width), data
-    
+def get_tiles_height_width_ratio(n_tiles, width_ratio = 1.0):
+    '''Get a height x width size that will fit n_tiles tiles.'''
+    width = int(np.ceil(np.sqrt(n_tiles * width_ratio)))
+    return get_tiles_height_width(n_tiles, desired_width = width)
+        
 def tile_images_normalize(data, c01 = False, boost_indiv = 0.0,  boost_gamma = 1.0, single_tile = False, scale_range = 1.0, neg_pos_colors = None):
     data = data.copy()
     if single_tile:
@@ -175,9 +170,13 @@ def tile_images_normalize(data, c01 = False, boost_indiv = 0.0,  boost_gamma = 1
         data = np.tile(data[:,:,:,np.newaxis], 3)
 
     return data
-        
-def tile_images_make_tiles(data, padsize=1, padval=0, width=None, highlights = None):
-    height,width = get_tiles_height_width(data.shape[0], desired_width = width)
+
+def tile_images_make_tiles(data, padsize=1, padval=0, hw=None, highlights = None):
+    if hw:
+        height,width = hw
+    else:
+        height,width = get_tiles_height_width(data.shape[0])
+    assert height*width >= data.shape[0], '%d rows x %d columns cannot fit %d tiles' % (height, width, data.shape[0])
 
     # First iteration: one-way padding, no highlights
     #padding = ((0, width*height - data.shape[0]), (0, padsize), (0, padsize)) + ((0, 0),) * (data.ndim - 3)
