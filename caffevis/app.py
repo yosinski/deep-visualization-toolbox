@@ -197,6 +197,7 @@ class JPGVisLoadingThread(CodependentThread):
                 img_corner = crop_to_corner(img, 2)
                 images[0] = ensure_uint255_and_resize_to_fit(img_corner, resize_shape)
             except IOError:
+                print '\nAttempted to load file %s but failed. To supress this warning, remove layer "%s" from settings.caffevis_jpgvis_layers' % (jpg_path, state_layer)
                 pass
 
             # 1. e.g. max_im/conv1/conv1_0037.jpg
@@ -754,7 +755,6 @@ class CaffeVisApp(BaseApp):
         if self.state.pattern_mode:
             # Show desired patterns loaded from disk
 
-            #available = ['conv1', 'conv2', 'conv3', 'conv4', 'conv5', 'fc6', 'fc7', 'fc8', 'prob']
             jpg_path = os.path.join(self.settings.caffevis_unit_jpg_dir,
                                     'regularized_opt', self.state.layer, 'whole_layer.jpg')
 
@@ -949,8 +949,14 @@ class CaffeVisApp(BaseApp):
         with self.state.lock:
             state_layer, state_selected_unit, cursor_area, show_unit_jpgs = self.state.layer, self.state.selected_unit, self.state.cursor_area, self.state.show_unit_jpgs
 
-        available = ['conv1', 'conv2', 'conv3', 'conv4', 'conv5', 'fc6', 'fc7', 'fc8', 'prob']
-        if state_layer in available and cursor_area == 'bottom' and show_unit_jpgs:
+        try:
+            # Some may be missing this layer
+            self.settings.caffevis_jpgvis_layers
+        except:
+            print '\n\nNOTE: you need to upgrade your settings.py file from the latest settings.py.template\n\n'
+            raise
+            
+        if self.settings.caffevis_jpgvis_layers and state_layer in self.settings.caffevis_jpgvis_layers and cursor_area == 'bottom' and show_unit_jpgs:
             img_key = (state_layer, state_selected_unit, pane.data.shape)
             img_resize = self.img_cache.get(img_key, None)
             if img_resize is None:
