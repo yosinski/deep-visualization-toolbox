@@ -31,7 +31,7 @@ def check_key(key_str):
     while True:
         keycode = cv2.waitKey(0)
         label, masked_vals = bindings.get_key_label_from_keycode(keycode, extra_info = True)
-        if 'shift' in label or 'ctrl' in label:
+        if label and ('shift' in label or 'ctrl' in label):
             print '(ignoring modifier %s)' % label,
             sys.stdout.flush()
         else:
