@@ -319,8 +319,12 @@ class CaffeVisApp(BaseApp):
         if self.state.pattern_mode:
             # Show desired patterns loaded from disk
 
+            load_layer = self.state.layer
+            if self.settings.caffevis_jpgvis_remap and self.state.layer in self.settings.caffevis_jpgvis_remap:
+                load_layer = self.settings.caffevis_jpgvis_remap[self.state.layer]
+
             jpg_path = os.path.join(self.settings.caffevis_unit_jpg_dir,
-                                    'regularized_opt', self.state.layer, 'whole_layer.jpg')
+                                    'regularized_opt', load_layer, 'whole_layer.jpg')
 
             # Get highres version
             cache_before = str(self.img_cache)
@@ -505,7 +509,7 @@ class CaffeVisApp(BaseApp):
             state_layer, state_selected_unit, cursor_area, show_unit_jpgs = self.state.layer, self.state.selected_unit, self.state.cursor_area, self.state.show_unit_jpgs
 
         try:
-            # Some may be missing this layer
+            # Some may be missing this setting
             self.settings.caffevis_jpgvis_layers
         except:
             print '\n\nNOTE: you need to upgrade your settings.py file from the latest settings.py.template\n\n'
