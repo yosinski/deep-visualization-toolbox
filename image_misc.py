@@ -49,7 +49,11 @@ def cv2_read_cap_rgb(cap, saveto = None):
     
 def cv2_read_file_rgb(filename):
     im = cv2.imread(filename)
-    im = im[:,:,::-1]   # Convert native OpenCV BGR -> RGB
+    if len(im.shape) == 2:
+        # Upconvert single channel grayscale to color
+        im = np.tile(im[:,:,np.newaxis], (1,1,3))
+    else:
+        im = im[:,:,::-1]   # Convert native OpenCV BGR -> RGB
     return im
 
     
@@ -59,6 +63,9 @@ def read_cam_frame(cap, saveto = None):
     frame = frame[:,::-1,:]  # flip L-R for display
     frame -= frame.min()
     frame *= (255.0 / (frame.max() + 1e-6))
+    if len(frame.shape) == 2:
+        # Upconvert single channel grayscale to color
+        frame = np.tile(frame[:,:,np.newaxis], (1,1,3))
     return frame
 
 def crop_to_square(frame):
