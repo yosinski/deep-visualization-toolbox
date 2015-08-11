@@ -16,7 +16,7 @@ from image_misc import FormattedString, cv2_typeset_text, to_255
 from caffe_proc_thread import CaffeProcThread
 from jpg_vis_loading_thread import JPGVisLoadingThread
 from caffevis_app_state import CaffeVisAppState
-from caffevis_helper import get_pretty_layer_name, read_label_file, load_sprite_image, load_square_sprite_image
+from caffevis_helper import get_pretty_layer_name, read_label_file, load_sprite_image, load_square_sprite_image, check_force_backward_true
 
 
 
@@ -51,14 +51,6 @@ class CaffeVisApp(BaseApp):
         self._net_channel_swap = (2,1,0)
         self._net_channel_swap_inv = tuple([self._net_channel_swap.index(ii) for ii in range(len(self._net_channel_swap))])
         self._range_scale = 1.0      # not needed; image comes in [0,255]
-        #self.net.set_phase_test()
-        #if settings.caffevis_mode_gpu:
-        #    self.net.set_mode_gpu()
-        #    print 'CaffeVisApp mode: GPU'
-        #else:
-        #    self.net.set_mode_cpu()
-        #    print 'CaffeVisApp mode: CPU'
-        # caffe.set_phase_test()       # TEST is default now
         if settings.caffevis_mode_gpu:
             caffe.set_mode_gpu()
             print 'CaffeVisApp mode: GPU'
@@ -71,8 +63,9 @@ class CaffeVisApp(BaseApp):
             mean = self._data_mean,
             channel_swap = self._net_channel_swap,
             raw_scale = self._range_scale,
-            #image_dims = (227,227),
         )
+
+        check_force_backward_true(settings.caffevis_deploy_prototxt)
 
         self.labels = None
         if self.settings.caffevis_labels:

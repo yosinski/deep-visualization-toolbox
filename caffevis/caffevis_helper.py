@@ -77,3 +77,26 @@ def load_square_sprite_image(img_path, n_sprites):
     
     tile_rows,tile_cols = get_tiles_height_width(n_sprites)
     return load_sprite_image(img_path, (tile_rows, tile_cols), n_sprites = n_sprites)
+
+
+def check_force_backward_true(prototxt_file):
+    '''Checks whether the given file contains a line with the following text, ignoring whitespace:
+    force_backward: true
+    '''
+
+    found = False
+    with open(prototxt_file, 'r') as ff:
+        for line in ff:
+            fields = line.strip().split()
+            if len(fields) == 2 and fields[0] == 'force_backward:' and fields[1] == 'true':
+                found = True
+                break
+
+    if not found:
+        print '\n\nWARNING: the specified prototxt'
+        print '"%s"' % prototxt_file
+        print 'does not contain the line "force_backward: true". This may result in backprop'
+        print 'and deconv producing all zeros at the input layer. You may want to add this line'
+        print 'to your prototxt file before continuing to force backprop to compute derivatives'
+        print 'at the data layer as well.\n\n'
+
