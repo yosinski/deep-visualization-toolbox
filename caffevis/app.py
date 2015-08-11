@@ -858,7 +858,17 @@ class CaffeVisApp(BaseApp):
             display_2D_resize = ensure_uint255_and_resize_to_fit(display_2D, pane.data.shape) * 0
         
         pane.data[0:display_2D_resize.shape[0], 0:display_2D_resize.shape[1], :] = display_2D_resize
-
+        
+        if self.settings.caffevis_label_layers and self.state.layer in self.settings.caffevis_label_layers and self.labels and self.state.cursor_area == 'bottom':
+            # Display label annotation atop layers pane (e.g. for fc8/prob)
+            defaults = {'face':  getattr(cv2, self.settings.caffevis_label_face),
+                        'fsize': self.settings.caffevis_label_fsize,
+                        'clr':   to_255(self.settings.caffevis_label_clr),
+                        'thick': self.settings.caffevis_label_thick}
+            loc_base = self.settings.caffevis_label_loc[::-1]   # Reverse to OpenCV c,r order
+            lines = [FormattedString(self.labels[self.state.selected_unit], defaults)]
+            cv2_typeset_text(pane.data, lines, loc_base)
+            
         return display_3D_highres
 
     def _draw_aux_pane(self, pane, layer_data_normalized):

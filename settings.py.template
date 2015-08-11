@@ -135,3 +135,9 @@ caffevis_class_clr_0 = (.5,.5,.5)
 caffevis_class_clr_1 = (.5,1,.5)
 caffevis_class_fsize = 1.0 * global_font_size
 caffevis_class_thick = 1
+
+caffevis_label_face = 'FONT_HERSHEY_COMPLEX_SMALL'
+caffevis_label_loc = (30,20)   # r,c order
+caffevis_label_clr = (.8,.8,.8)
+caffevis_label_fsize = 1.0 * global_font_size
+caffevis_label_thick = 1
