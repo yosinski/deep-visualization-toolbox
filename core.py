@@ -21,10 +21,10 @@ from image_misc import cv2_imshow_rgb, cv2_read_file_rgb, read_cam_frame, crop_t
 from image_misc import FormattedString, cv2_typeset_text, to_255
 from bindings import bindings
 
+
+
 class ImproperlyConfigured(Exception):
     pass
-
-
 
 
 
@@ -38,7 +38,6 @@ class Pane(object):
         self.j_size = j_size
         self.i_end = i_begin + i_size
         self.j_end = j_begin + j_size
-        #self.shape = (i_size, j_size)
         self.data = None    # eventually contains a slice of the window buffer
 
 
@@ -64,7 +63,8 @@ class CodependentThread(Thread):
                 return True
             else:
                 return False
-        
+
+
 
 class InputImageFetcher(CodependentThread):
     '''Fetches images from a webcam or loads from a directory.'''
@@ -175,10 +175,6 @@ class InputImageFetcher(CodependentThread):
                     with self.lock:
                         self.latest_cam_frame = frame
                         self._increment_and_set_frame(self.latest_cam_frame, True)
-            #if self.latest_frame is not None:
-            #    self.update_frame(self.latest_frame)
-            #    self.latest_frame = None
-            #    #self.read_frames += 1
             
             time.sleep(self.sleep_after_read_frame)
             #print 'Reading one frame took', time.time() - start_time
@@ -278,9 +274,6 @@ class LiveVis(object):
         self.buffer_height = max_i
         self.buffer_width = max_j
 
-        #self.window_buffer = np.ones((max_i, max_j, 3), 'float32') * self.settings.window_background    # i, j, 3 RGB channels
-        #self.window_buffer = np.zeros((max_i, max_j, 3), 'uint8')  # i, j, 3 RGB channels
-        #self.window_buffer[:] = int(self.settings.window_background * 255)
         self.window_buffer = np.tile(np.array(np.array(self.settings.window_background) * 255, 'uint8'),
                                      (max_i,max_j,1))
         #print 'BUFFER IS:', self.window_buffer.shape, self.window_buffer.min(), self.window_buffer.max()
@@ -295,11 +288,6 @@ class LiveVis(object):
                               int(self.settings.help_pane_loc[1]*max_j),
                               int(self.settings.help_pane_loc[2]*max_i),
                               int(self.settings.help_pane_loc[3]*max_j))
-        #hp_max_i = self.help_pane_pix_loc[2] - self.help_pane_pix_loc[0]
-        #hp_max_j = self.help_pane_pix_loc[3] - self.help_pane_pix_loc[1]
-        #self.help_pane = Pane(0, 0, hp_max_i, hp_max_j)
-        #self.help_buffer = np.tile(np.array(np.array(self.settings.window_background) * 255, 'uint8'),
-        #                           (hp_max_i,hp_max_j,1))
         self.help_buffer = self.window_buffer.copy() # For rendering help mode
         self.help_pane.data = self.help_buffer[self.help_pane.i_begin:self.help_pane.i_end, self.help_pane.j_begin:self.help_pane.j_end]
 
@@ -333,15 +321,10 @@ class LiveVis(object):
             for heartbeat in heartbeat_functions:
                 #print 'Heartbeat: calling', heartbeat
                 heartbeat()
-
-            #print 'run_loop: sleeping .5...'
-            #time.sleep(.5)
-            #print 'run_loop: continuing'
             
             # Handle key presses
-            #time.sleep(.2)
             keys = []
-            # Collect key presses, up to 10
+            # Collect key presses (multiple if len(range)>1)
             for cc in range(1):
                 with WithTimer('LiveVis:waitKey', quiet = self.debug_level < 2):
                     key = cv2.waitKey(self.settings.main_loop_sleep_ms)
@@ -365,7 +348,6 @@ class LiveVis(object):
 
             #print '                                                         Number of keys:', len(keys)
             for key in keys:
-                #if key != -1:
                 since_keypress = 0
                 #print 'Got Key:', key
                 key,do_redraw = self.handle_key_pre_apps(key)
@@ -380,18 +362,6 @@ class LiveVis(object):
             for app_name, app in self.apps.iteritems():
                 redraw_needed |= app.redraw_needed()
 
-            #if ii > 0:
-            #    print 'skipping...'
-            #    continue        
-
-            # Read frame
-            #with WithTimer('reading'):
-            #    #if ii == 0:
-            #    if ii == 0 or since_keypress > 1:
-            #        frame_full = read_cam_frame(cap)
-                    #        frame = crop_to_square(frame_full)
-            ###print 'Main: acquiring lock'
-
             # Grab latest frame from input_updater thread
             fr_idx,fr_data = self.input_updater.get_frame()
             is_new_frame = (fr_idx != latest_frame_idx and fr_data is not None)
@@ -404,7 +374,6 @@ class LiveVis(object):
                 with WithTimer('LiveVis.display_frame', quiet = self.debug_level < 1):
                     self.display_frame(latest_frame_data)
                 imshow_needed = True
-                #redraw_needed = True
 
             do_handle_input = (ii == 0 or
                                since_keypress >= self.settings.keypress_pause_handle_iterations)
@@ -421,16 +390,12 @@ class LiveVis(object):
                           since_redraw >= self.settings.redraw_at_least_every))
             if redraw_needed and do_redraw:
                 for app_name, app in self.apps.iteritems():
-                    #print 'HERE +++'
-                    #with WithTimer('drawing ' + app_name):
-                    #    app.draw(self.panes)
                     with WithTimer('%s:draw' % app_name, quiet = self.debug_level < 1):
                         imshow_needed |= app.draw(self.panes)
                 redraw_needed = False
                 since_redraw = 0
 
             # Render buffer
-            #HERE Skip every other time to see if it helps
             if imshow_needed:
                 with WithTimer('LiveVis:imshow', quiet = self.debug_level < 1):
                     if self.help_mode:
@@ -441,11 +406,6 @@ class LiveVis(object):
                     else:
                         cv2_imshow_rgb(self.window_name, self.window_buffer)
                     imshow_needed = False
-                #if skip_imshow:
-                #    print '      * skipped imshow'
-                #else:
-                #    print '      * ran imshow'
-                #pass
 
             ii += 1
             since_keypress += 1
@@ -453,7 +413,7 @@ class LiveVis(object):
             if ii % 2 == 0:
                 sys.stdout.write('.')
             sys.stdout.flush()
-            # Extra sleep for debugging. In production all main loop sleep should be in cv2.waitKey.
+            # Extra sleep just for debugging. In production all main loop sleep should be in cv2.waitKey.
             #time.sleep(2)
 
         print '\n\nTrying to exit run_loop...'
@@ -462,9 +422,7 @@ class LiveVis(object):
         if self.input_updater.is_alive():
             raise Exception('Could not join self.input_updater thread')
         else:
-            #print 'Final Is_alive: %s' % self.input_updater.is_alive()
             self.input_updater.free_camera()
-            #print 'self.input_updater.bound_cap_device is', self.input_updater.bound_cap_device
 
         for app_name, app in self.apps.iteritems():
             print 'Quitting app:', app_name
@@ -493,8 +451,6 @@ class LiveVis(object):
         elif tag == 'stretch_mode':
             self.input_updater.toggle_stretch_mode()
             print 'Stretch mode is now', self.input_updater.static_file_stretch_mode
-            #self.static_file_stretch_mode = not self.static_file_stretch_mode
-            #print 'Do something else here???'
         elif tag == 'debug_level':
             self.debug_level = (self.debug_level + 1) % 3
             for app_name, app in self.apps.iteritems():
@@ -529,7 +485,6 @@ class LiveVis(object):
         self.help_buffer[:] *= .7
         self.help_pane.data *= .7
         
-        #pane.data[:] = to_255(self.settings.window_background)
         defaults = {'face': getattr(cv2, self.settings.caffevis_help_face),
                     'fsize': self.settings.caffevis_help_fsize,
                     'clr': to_255(self.settings.caffevis_help_clr),
@@ -540,20 +495,6 @@ class LiveVis(object):
         lines.append([FormattedString('~ ~ ~ Deep Visualization Toolbox ~ ~ ~', defaults, align='center', width=self.help_pane.j_size)])
         lines.append([FormattedString('', defaults)])
         lines.append([FormattedString('Base keys', defaults)])
-
-        #lines.append([FormattedString('lllll', defaults), FormattedString('WWWW', defaults)])
-        #lines.append([FormattedString('WWWWW', defaults), FormattedString('llll', defaults)])
-        #lines.append([FormattedString('lllll', defaults, width=150), FormattedString('WWWW', defaults, width=150)])
-        #lines.append([FormattedString('WWWWW', defaults, width=150), FormattedString('llll', defaults, width=150)])
-        #lines.append([FormattedString('AAA', defaults),
-        #              FormattedString('left', defaults, width = 300),
-        #              FormattedString('BBB', defaults)])
-        #lines.append([FormattedString('AAA', defaults),
-        #              FormattedString('center', defaults, width = 300, align='center'),
-        #              FormattedString('BBB', defaults)])
-        #lines.append([FormattedString('AAA', defaults),
-        #              FormattedString('right', defaults, width = 300, align='right'),
-        #              FormattedString('BBB', defaults)])
 
         for tag in ('help_mode', 'freeze_cam', 'toggle_input_mode', 'static_file_increment', 'static_file_decrement', 'stretch_mode', 'quit'):
             key_strings, help_string = self.bindings.get_key_help(tag)
@@ -566,4 +507,3 @@ class LiveVis(object):
 
         for app_name, app in self.apps.iteritems():
             locy = app.draw_help(self.help_pane, locy)
-

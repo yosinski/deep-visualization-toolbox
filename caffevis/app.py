@@ -25,46 +25,6 @@ def net_preproc_forward(net, img):
     output = net.forward(data=data_blob)
     return output
 
-# DEPRECATED
-#
-# class SmartPadder(object):
-#     def __init__(self):
-#         self.calls = 0
-# 
-#     def pad_function(self, vector, iaxis_pad_width, iaxis, kwargs):
-#         if self.calls > 100:
-#             if iaxis_pad_width[0] > 0:
-#                 vector[:iaxis_pad_width[0]] = np.random.uniform(0,1,iaxis_pad_width[0])
-#             if iaxis_pad_width[1] > 0:
-#                 vector[-iaxis_pad_width[1]:] = np.random.uniform(0,1,iaxis_pad_width[1])
-#         self.calls += 1
-#         return vector
-#         
-# 
-#     #def get_pad_function(self):
-#     #    return lambda args : self.pad_function(*args)
-#         
-# def jy_pad_fn(vector, iaxis_pad_width, iaxis, kwargs):
-#     '''
-#     Called like this:
-#     jy_pad_fn: (100,) (0, 4) 0
-#     jy_pad_fn: (29,) (1, 1) 1
-#     jy_pad_fn: (29,) (1, 1) 2
-#     jy_pad_fn: (3,) (0, 0) 3
-#     '''
-#     #if np.random.uniform(0,1) < .01:
-#     #    print 'jy_pad_fn:', vector.shape, iaxis_pad_width, iaxis
-#     #vector[:] = np.random.uniform(0,1,(vector.shape))
-#     #vector[:] = np.random.uniform(0,1,(vector.shape))
-# 
-#     if iaxis_pad_width[0] > 0:
-#         vector[:iaxis_pad_width[0]] = np.random.uniform(0,1,iaxis_pad_width[0])
-#     if iaxis_pad_width[1] > 0:
-#         vector[-iaxis_pad_width[1]:] = np.random.uniform(0,1,iaxis_pad_width[1])
-#     return vector
-#     #assert False
-
-
 layer_renames = {
     'pool1': 'p1',
     'norm1': 'n1',
@@ -283,7 +243,6 @@ class JPGVisLoadingThread(CodependentThread):
 
         print 'JPGVisLoadingThread.run: finished'
 
-        
 
 
 class CaffeVisAppState(object):
@@ -516,6 +475,7 @@ class CaffeVisAppState(object):
         self.selected_unit = min(self.tiles_number-1, self.selected_unit)
 
 
+
 class CaffeVisApp(BaseApp):
     '''App to visualize using caffe.'''
 
@@ -683,46 +643,6 @@ class CaffeVisApp(BaseApp):
                 self.state.caffe_net_state = 'free'
         return do_draw
 
-    def _OLDDEP_draw_control_pane(self, pane):
-        pane.data[:] = to_255(self.settings.window_background)
-
-        with self.state.lock:
-            layer_idx = self.state.layer_idx
-
-        face = getattr(cv2, self.settings.caffevis_control_face)
-        loc = self.settings.caffevis_control_loc[::-1]   # Reverse to OpenCV c,r order
-        clr = to_255(self.settings.caffevis_control_clr)
-        clr_sel = to_255(self.settings.caffevis_control_clr_selected)
-        clr_high = to_255(self.settings.caffevis_control_clr_cursor)
-        fsize = self.settings.caffevis_control_fsize
-        thick = self.settings.caffevis_control_thick
-        thick_sel = self.settings.caffevis_control_thick_selected
-        thick_high = self.settings.caffevis_control_thick_cursor
-
-        st1 = ' '.join(self.layer_print_names[:layer_idx])
-        st3 = ' '.join(self.layer_print_names[layer_idx+1:])
-        st2 = ((' ' if len(st1) > 0 else '')
-               + self.layer_print_names[layer_idx]
-               + (' ' if len(st3) > 0 else ''))
-        st1 = ' ' + st1
-        cv2.putText(pane.data, st1, loc, face, fsize, clr, thick)
-        boxsize1, _ = cv2.getTextSize(st1, face, fsize, thick)
-        loc = (loc[0] + boxsize1[0], loc[1])
-
-        if self.state.cursor_area == 'top':
-            clr_this, thick_this = clr_high, thick_high
-        else:
-            clr_this, thick_this = clr_sel, thick_sel
-        cv2.putText(pane.data, st2, loc, face, fsize, clr_this, thick_this)
-        boxsize2, _ = cv2.getTextSize(st2, face, fsize, thick_this)
-        loc = (loc[0] + boxsize2[0], loc[1])
-        
-        cv2.putText(pane.data, st3, loc, face, fsize, clr, thick)
-
-        #print 'st1', st1
-        #print 'st2', st2
-        #print 'st3', st3
-
     def _draw_prob_labels_pane(self, pane):
         '''Adds text label annotation atop the given pane.'''
 
@@ -753,8 +673,7 @@ class CaffeVisApp(BaseApp):
 
         cv2_typeset_text(pane.data, strings, loc,
                          line_spacing = self.settings.caffevis_class_line_spacing)
-        
-        
+
     def _draw_control_pane(self, pane):
         pane.data[:] = to_255(self.settings.window_background)
 
@@ -789,11 +708,6 @@ class CaffeVisApp(BaseApp):
 
     def _draw_status_pane(self, pane):
         pane.data[:] = to_255(self.settings.window_background)
-
-
-
-
-
 
         defaults = {'face':  getattr(cv2, self.settings.caffevis_status_face),
                     'fsize': self.settings.caffevis_status_fsize,
@@ -1095,20 +1009,6 @@ class CaffeVisApp(BaseApp):
         nav_string = 'Navigate with %s%s. Use %s to move faster.' % (keys_nav_0, keys_nav_1, keys_nav_f)
         lines.append([FormattedString('', defaults, width=120, align='right'),
                       FormattedString(nav_string, defaults)])
-
-        #label = '%10s:' % (
-        #help_string = 'Move cursor left, right, up, or down'
-        #lines.append([FormattedString(label, defaults, width=120, align='right'),
-        #              FormattedString(help_string, defaults)])
-        #if len(kl)>1 and len(kr)>1 and len(ku)>1 and len(kd)>1:
-        #    label = '%10s:' % (','.join([kk[1] for kk in (kl, kr, ku, kd)]))
-        #    help_string = 'Move cursor left, right, up, or down'
-        #    lines.append([FormattedString(label, defaults, width=120, align='right'),
-        #                  FormattedString(help_string, defaults)])
-        #label = '%10s:' % (','.join([kk[0] for kk in (klf, krf, kuf, kdf)]))
-        #help_string = 'Move cursor left, right, up, or down (faster)'
-        #lines.append([FormattedString(label, defaults, width=120, align='right'),
-        #              FormattedString(help_string, defaults)])
             
         for tag in ('sel_layer_left', 'sel_layer_right', 'zoom_mode', 'pattern_mode',
                     'ez_back_mode_loop', 'freeze_back_unit', 'show_back', 'back_mode', 'back_filt_mode',
@@ -1137,12 +1037,9 @@ def crop_to_corner(img, corner, small_padding = 1, large_padding = 2):
     #tp = 0
     return img[big_ii*half_size+tp:(big_ii+1)*half_size-tp,
                big_jj*half_size+tp:(big_jj+1)*half_size-tp]
-    
-    #image_pixels = img.shape[0] - small_padding * 12 - large_padding * 4
-    #assert image_pixels % 6 == 0, 'math error'
-    #small_image_size = image_pixels / 6
 
-    
+
+
 def load_sprite_image(img_path, rows_cols, n_sprites = None):
     '''Load a 2D sprite image where (rows,cols) = rows_cols. Sprite
     shape is computed automatically. If n_sprites is not given, it is

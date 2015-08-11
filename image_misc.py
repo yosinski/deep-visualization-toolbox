@@ -168,10 +168,6 @@ def tile_images_normalize(data, c01 = False, boost_indiv = 0.0,  boost_gamma = 1
         data = (data.T * mm).T
     if boost_gamma != 1.0:
         data = data ** boost_gamma
-    #if False:
-    #    print 'SQRT gamma'
-    #    data = data ** .5
-    #assert False
 
     # Promote single-channel data to 3 channel color
     if len(data.shape) == 3:
@@ -183,11 +179,11 @@ def tile_images_normalize(data, c01 = False, boost_indiv = 0.0,  boost_gamma = 1
 def tile_images_make_tiles(data, padsize=1, padval=0, width=None, highlights = None):
     height,width = get_tiles_height_width(data.shape[0], desired_width = width)
 
-    # Old one-way padding, no highlights
+    # First iteration: one-way padding, no highlights
     #padding = ((0, width*height - data.shape[0]), (0, padsize), (0, padsize)) + ((0, 0),) * (data.ndim - 3)
     #data = np.pad(data, padding, mode='constant', constant_values=(padval, padval))
 
-    # New two-way padding with highlights
+    # Second iteration: padding with highlights
     #padding = ((0, width*height - data.shape[0]), (padsize, padsize), (padsize, padsize)) + ((0, 0),) * (data.ndim - 3)
     #print 'tile_images: data min,max =', data.min(), data.max()
     #padder = SmartPadder()
@@ -195,7 +191,7 @@ def tile_images_make_tiles(data, padsize=1, padval=0, width=None, highlights = N
     #data = np.pad(data, padding, mode=padder.pad_function)
     #print 'padder.calls =', padder.calls
     
-    # New new way, two-way padding with highlights
+    # Third iteration: two-way padding with highlights
     if highlights is not None:
         assert len(highlights) == data.shape[0]
     padding = ((0, width*height - data.shape[0]), (padsize, padsize), (padsize, padsize)) + ((0, 0),) * (data.ndim - 3)
@@ -231,9 +227,7 @@ def tile_images_make_tiles(data, padsize=1, padval=0, width=None, highlights = N
                 data[ii,:,:padding[2][0],:] = highlight
                 if padding[2][1] > 0:
                     data[ii,:,-padding[2][1]:,:] = highlight
-            
-            
-    
+
     # tile the filters into an image
     data = data.reshape((height, width) + data.shape[1:]).transpose((0, 2, 1, 3) + tuple(range(4, data.ndim + 1)))
     data = data.reshape((height * data.shape[1], width * data.shape[3]) + data.shape[4:])
