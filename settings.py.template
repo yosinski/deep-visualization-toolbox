@@ -80,6 +80,7 @@ caffevis_layer_pretty_names = {
     'norm2': 'n2',
     'pool5': 'p5',
 }
+caffevis_layers_aspect_ratio = 1.0
 
 caffevis_data_hw         = (227,227)
 caffevis_mode_gpu        = False

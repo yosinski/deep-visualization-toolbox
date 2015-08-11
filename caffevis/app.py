@@ -538,7 +538,7 @@ class CaffeVisApp(BaseApp):
             self.net_layer_info[key]['isconv'] = (len(blob_shape) == 4)
             self.net_layer_info[key]['data_shape'] = blob_shape[1:]  # Chop off batch size
             self.net_layer_info[key]['n_tiles'] = blob_shape[1]
-            self.net_layer_info[key]['tiles_rc'] = get_tiles_height_width_ratio(blob_shape[1], self.settings.caffevis_layers_ratio)
+            self.net_layer_info[key]['tiles_rc'] = get_tiles_height_width_ratio(blob_shape[1], self.settings.caffevis_layers_aspect_ratio)
             self.net_layer_info[key]['tile_rows'] = self.net_layer_info[key]['tiles_rc'][0]
             self.net_layer_info[key]['tile_cols'] = self.net_layer_info[key]['tiles_rc'][1]
         
