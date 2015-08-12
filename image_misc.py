@@ -424,3 +424,24 @@ def cv2_typeset_text(data, lines, loc, between = ' ', string_spacing = 0, line_s
         locy += maxy + line_spacing
         
     return locy
+
+
+
+def saveimage(filename, im):
+    '''Saves an image with pixel values in [0,1]'''
+    #matplotlib.image.imsave(filename, im)
+    if len(im.shape) == 3:
+        # Reverse RGB to OpenCV BGR order for color images
+        cv2.imwrite(filename, 255*im[:,:,::-1])
+    else:
+        cv2.imwrite(filename, 255*im)
+
+
+
+def saveimagesc(filename, im):
+    saveimage(filename, norm01(im))
+
+
+
+def saveimagescc(filename, im, center):
+    saveimage(filename, norm01c(im, center))
