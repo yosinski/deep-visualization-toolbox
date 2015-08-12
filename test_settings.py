@@ -3,6 +3,10 @@
 import os
 import imp
 import argparse
+import sys
+
+# Skip creating pyc files (particularly for settings.py.template)
+sys.dont_write_bytecode = True
 
 
 
