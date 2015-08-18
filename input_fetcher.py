@@ -48,7 +48,9 @@ class InputImageFetcher(CodependentThread):
             if self.bound_cap_device.isOpened():
                 print 'InputImageFetcher: capture device %s is open' % self.capture_device
             else:
-                print 'InputImageFetcher: capture device %s failed to open! Camera will not be available!\n\n' % self.capture_device
+                print '\n\nWARNING: InputImageFetcher: capture device %s failed to open! Camera will not be available!\n\n' % self.capture_device
+                self.bound_cap_device = None
+                self.no_cam_present = True
         print 'InputImageFetcher: bind_camera finished'
 
     def free_camera(self):

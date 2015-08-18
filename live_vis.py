@@ -217,7 +217,7 @@ class LiveVis(object):
             ii += 1
             since_keypress += 1
             since_redraw += 1
-            if ii % 2 == 0:
+            if ii % 2 == 0 and self.settings.print_dots:
                 sys.stdout.write('.')
             sys.stdout.flush()
             # Extra sleep just for debugging. In production all main loop sleep should be in cv2.waitKey.

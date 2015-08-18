@@ -12,6 +12,7 @@ input_updater_sleep_after_read_frame = 1.0/20    # Sleep after reading frame
 #input_updater_sleep_after_read_frame = 2    # Sleep after reading frame
 input_updater_heartbeat_required = 15.0      # Thread dies after this many seconds without a heartbeat
 main_loop_sleep_ms = 1                    # Sleep while waiting for key presses and redraws. Recommendation: 1
+print_dots = True
 
 window_panes = (
     # (i, j, i_size, j_size)
