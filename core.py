@@ -526,8 +526,8 @@ class LiveVis(object):
         self.panes['input'].data[:] = frame_disp
 
     def draw_help(self):
-        self.help_buffer[:] *= .7
-        self.help_pane.data *= .7
+        self.help_buffer[:] = self.help_buffer[:] * .7
+        self.help_pane.data[:] = self.help_pane.data[:] * .7
         
         #pane.data[:] = to_255(self.settings.window_background)
         defaults = {'face': getattr(cv2, self.settings.caffevis_help_face),
