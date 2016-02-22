@@ -4,18 +4,18 @@ The optimization results in the paper may be reproduced using the `optimize_imag
 
     ./optimize_image.py --decay 0      --blur-radius 0.5 --blur-every 4  --small-norm-percentile 50     --max-iter 500  --lr-policy progress --lr-params "{'max_lr': 100.0, 'desired_prog': 2.0}"
     ./optimize_image.py --decay 0.3    --blur-radius 0   --blur-every 0  --small-norm-percentile 20     --max-iter 750  --lr-policy constant --lr-params "{'lr': 100.0}"
-    **./optimize_image.py --decay 0.0001 --blur-radius 1.0 --blur-every 4                                 --max-iter 1000 --lr-policy constant --lr-params "{'lr': 100.0}"**
+    ./optimize_image.py --decay 0.0001 --blur-radius 1.0 --blur-every 4                                 --max-iter 1000 --lr-policy constant --lr-params "{'lr': 100.0}"
     ./optimize_image.py --decay 0      --blur-radius 0.5 --blur-every 4  --px-abs-benefit-percentile 90 --max-iter 1000 --lr-policy progress --lr-params "{'max_lr': 100000000, 'desired_prog': 2.0}"
 
-The third line version is the most used in the paper (the smoothest, with a wide 1 pixel radius blur applied every 4 steps).
+The hyperparameters given on the third line are the ones used for most of the image in the paper. This set of hyperparameters produced smooth images by using a wide 1 pixel radius blur applied every 4 steps.
 
-See below for a complete description of script options.
+See below for a complete description of other available `optimize_image.py` options.
 
 
 
-# `optimize_image.py` script options
+# Full optimize_image.py script options
 
-Description of available options in `optimize_image.py` script (output of `./optimize_image.py --help`):
+Description of available options in `optimize_image.py` script (annotated output of `./optimize_image.py --help`):
 
     usage: optimize_image.py [-h] [--caffe-root CAFFE_ROOT] [--deploy-proto DEPLOY_PROTO]
                              [--net-weights NET_WEIGHTS] [--mean MEAN]
@@ -37,6 +37,9 @@ Description of available options in `optimize_image.py` script (output of `./opt
     
     optional arguments:
       -h, --help            show this help message and exit
+      
+Which trained network to load
+
       --caffe-root CAFFE_ROOT
                             Path to caffe root directory. (default: /Users/jason/s/caffe2)
       --deploy-proto DEPLOY_PROTO
@@ -53,12 +56,18 @@ Description of available options in `optimize_image.py` script (output of `./opt
                             BGR. (default: (2,1,0))
       --data-size DATA_SIZE
                             Size of network input. (default: (227,227))
+                            
+Where to start optimization
+
       --start-at {mean_plus_rand,randu,mean}
                             How to generate x0, the initial point used in optimization. (default:
                             mean_plus_rand)
       --rand-seed RAND_SEED
                             Random seed used for generating the start-at image (use different seeds to
                             generate different images). (default: 0)
+
+Which neuron to optimize and in what direction:
+
       --push-layer PUSH_LAYER
                             Name of layer that contains the desired neuron whose value is optimized.
                             (default: fc8)
@@ -73,6 +82,9 @@ Description of available options in `optimize_image.py` script (output of `./opt
       --push-dir PUSH_DIR   Which direction to push the activation of the selected neuron, that is, the
                             value used to begin backprop. For example, use 1 to maximize the selected
                             neuron activation and -1 to minimize it. (default: 1)
+
+Which regularization options to apply
+
       --decay DECAY         Amount of L2 decay to use. (default: 0)
       --blur-radius BLUR_RADIUS
                             Radius in pixels of blur to apply after each BLUR_EVERY steps. If 0, perform
@@ -94,6 +106,9 @@ Description of available options in `optimize_image.py` script (output of `./opt
                             Induce sparsity by setting pixels with contribution under
                             PX_BENEFIT_PERCENTILE percentile to 0. \theta_{c_pct} from the paper. 0 to
                             disable. (default: 0)
+
+What learning rate schedule to use
+
       --lr-policy {constant,progress,progress01}
                             Learning rate policy. See description in lr-params. (default: constant)
       --lr-params LR_PARAMS
@@ -109,6 +124,9 @@ Description of available options in `optimize_image.py` script (output of `./opt
                             policy optimization slows down as the output approaches 1 (see code for
                             details). (default: {"lr": 1})
       --max-iter MAX_ITER   Number of iterations of the optimization loop. (default: 500)
+      
+Where to save results
+
       --output-prefix OUTPUT_PREFIX
                             Output path and filename prefix (default: optimize_results/opt) (default:
                             optimize_results/opt)
