@@ -1,10 +1,10 @@
 # Producing optimized images
 
-The optimization results in the paper may be reproduced using the `optimize_image.py` script. Table 1 of the paper gives four sets of recommended optimization hyperparameters. These may be implemented using the following combination of command line flags (same order as Table 1):
+The optimization results in the paper may be reproduced using the `optimize_image.py` script. Table 1 of the paper gives four sets of recommended optimization hyperparameters. These may be implemented using the following combination of command line flags (in the same order as Table 1):
 
     ./optimize_image.py --decay 0      --blur-radius 0.5 --blur-every 4  --small-norm-percentile 50     --max-iter 500  --lr-policy progress --lr-params "{'max_lr': 100.0, 'desired_prog': 2.0}"
     ./optimize_image.py --decay 0.3    --blur-radius 0   --blur-every 0  --small-norm-percentile 20     --max-iter 750  --lr-policy constant --lr-params "{'lr': 100.0}"
-    ./optimize_image.py --decay 0.0001 --blur-radius 1.0 --blur-every 4                                 --max-iter 1000 --lr-policy constant --lr-params "{'lr': 100.0}"
+    **./optimize_image.py --decay 0.0001 --blur-radius 1.0 --blur-every 4                                 --max-iter 1000 --lr-policy constant --lr-params "{'lr': 100.0}"**
     ./optimize_image.py --decay 0      --blur-radius 0.5 --blur-every 4  --px-abs-benefit-percentile 90 --max-iter 1000 --lr-policy progress --lr-params "{'max_lr': 100000000, 'desired_prog': 2.0}"
 
 The third line version is the most used in the paper (the smoothest, with a wide 1 pixel radius blur applied every 4 steps).
