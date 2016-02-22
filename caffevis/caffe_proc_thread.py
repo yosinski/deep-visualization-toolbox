@@ -10,7 +10,7 @@ from caffevis_helper import net_preproc_forward
 class CaffeProcThread(CodependentThread):
     '''Runs Caffe in separate thread.'''
 
-    def __init__(self, net, state, loop_sleep, pause_after_keys, heartbeat_required):
+    def __init__(self, net, state, loop_sleep, pause_after_keys, heartbeat_required, mode_gpu):
         CodependentThread.__init__(self, heartbeat_required)
         self.daemon = True
         self.net = net
@@ -21,10 +21,19 @@ class CaffeProcThread(CodependentThread):
         self.loop_sleep = loop_sleep
         self.pause_after_keys = pause_after_keys
         self.debug_level = 0
+        self.mode_gpu = mode_gpu      # Needed so the mode can be set again in the spawned thread, because there is a separate Caffe object per thread.
         
     def run(self):
         print 'CaffeProcThread.run called'
         frame = None
+
+        import caffe
+        if self.mode_gpu:
+            caffe.set_mode_gpu()
+            print 'CaffeVisApp mode (in CaffeProcThread): GPU'
+        else:
+            caffe.set_mode_cpu()
+            print 'CaffeVisApp mode (in CaffeProcThread): CPU'
         
         while not self.is_timed_out():
             with self.state.lock:

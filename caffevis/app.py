@@ -51,12 +51,17 @@ class CaffeVisApp(BaseApp):
         self._net_channel_swap = (2,1,0)
         self._net_channel_swap_inv = tuple([self._net_channel_swap.index(ii) for ii in range(len(self._net_channel_swap))])
         self._range_scale = 1.0      # not needed; image comes in [0,255]
+
+        # Set the mode to CPU or GPU. Note: in the latest Caffe
+        # versions, there is one Caffe object *per thread*, so the
+        # mode must be set per thread! Here we set the mode for the
+        # main thread.
         if settings.caffevis_mode_gpu:
             caffe.set_mode_gpu()
-            print 'CaffeVisApp mode: GPU'
+            print 'CaffeVisApp mode (in main thread):     GPU'
         else:
             caffe.set_mode_cpu()
-            print 'CaffeVisApp mode: CPU'
+            print 'CaffeVisApp mode (in main thread):     CPU'
         self.net = caffe.Classifier(
             settings.caffevis_deploy_prototxt,
             settings.caffevis_network_weights,
@@ -108,7 +113,8 @@ class CaffeVisApp(BaseApp):
             self.proc_thread = CaffeProcThread(self.net, self.state,
                                                self.settings.caffevis_frame_wait_sleep,
                                                self.settings.caffevis_pause_after_keys,
-                                               self.settings.caffevis_heartbeat_required)
+                                               self.settings.caffevis_heartbeat_required,
+                                               self.settings.caffevis_mode_gpu)
             self.proc_thread.start()
 
         if self.jpgvis_thread is None or not self.jpgvis_thread.is_alive():
