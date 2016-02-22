@@ -33,7 +33,7 @@ As noted above, feel free to compile in `CPU_ONLY` mode if desired.
 
 You may have already installed the `python-opencv` bindings as part of the Caffe setup process. If `import cv2` works from Python, then you're all set. If not, install the bindings like this:
 
-Linux:
+Ubuntu:
 
     $ sudo apt-get install python-opencv
 
@@ -70,7 +70,7 @@ Simple:
 
     $ ./run_toolbox.py
 
-Once the toolbox is running, push 'h' to show a help screen. You can also have a look at `bindings.py` to see what the various keys do. If the window is too large or too small for your screen, set the `global_scale` variable in `settings.py` to a value smaller or larger than one.
+Once the toolbox is running, push 'h' to show a help screen. You can also have a look at `bindings.py` to see what the various keys do. If the window is too large or too small for your screen, set the `global_scale` variable in `settings.py` to a value smaller or larger than 1.0.
 
 
 
