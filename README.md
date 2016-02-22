@@ -84,4 +84,4 @@ If you have any problems running the Deep Vis Toolbox, here are a few things to 
  * If the backprop pane in the lower left is just gray, it's probably because backprop and deconv are producing all zeros. By default, Caffe won't compute derivatives at the data layer, because they're not needed to update parameters. The fix is simple: just add "force_backward: true" to your network prototxt, [like this](https://github.com/yosinski/deep-visualization-toolbox/blob/master/models/caffenet-yos/caffenet-yos-deploy.prototxt#L7).
  * If none of that helps, feel free to [email me](http://yosinski.com/) or [submit an issue](https://github.com/yosinski/deep-visualization-toolbox/issues). I might have left out an important detail here or there :).
 
-If you're desperate, it's also possible to [run the toolbox on Amazon EC2](/yosinski/deep-visualization-toolbox/blob/master/doc/deep-vis-on-aws.md), but display will be much slower and images can be loaded only from file (not from webcam).
+If you're desperate, it's also possible to [run the toolbox on Amazon EC2](doc/deep-vis-on-aws.md), but display will be much slower and images can be loaded only from file (not from webcam).
