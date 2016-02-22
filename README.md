@@ -50,7 +50,7 @@ Other install options on Mac may also work well.
 You can put it wherever you like:
 
     $ git clone https://github.com/yosinski/deep-visualization-toolbox
-    $ cd deep_visualization_toolbox
+    $ cd deep-visualization-toolbox
 
 Copy `settings.py.template` to `settings.py` and edit it so the `caffevis_caffe_root` variable points to the directory where you've compiled caffe in Step 1:
 
