@@ -20,7 +20,7 @@ class FindParams(object):
         default_params = dict(
             # Starting
             rand_seed = 0,
-            start_at = 'mean_plus',
+            start_at = 'mean_plus_rand',
             
             # Optimization
             push_layer = 'prob',
@@ -29,7 +29,7 @@ class FindParams(object):
             push_dir = 1.0,
             decay = .01,
             blur_radius = None,   # 0 or at least .3
-            blur_every = None,
+            blur_every = 0,       # 0 to skip blurring
             small_val_percentile = None,
             small_norm_percentile = None,
             px_benefit_percentile = None,
@@ -186,11 +186,11 @@ class GradientOptimizer(object):
         
         np.random.seed(params.rand_seed)
 
-        if params.start_at == 'mean_plus':
+        if params.start_at == 'mean_plus_rand':
             x0 = np.random.normal(0, 10, self.data_mean.shape)
         elif params.start_at == 'randu':
             x0 = uniform(0, 255, self.data_mean.shape) - self.data_mean
-        elif params.start_at == 'zero':
+        elif params.start_at == 'mean':
             x0 = zeros(self.data_mean.shape)
         else:
             raise Exception('Unknown start conditions: %s' % params.start_at)
@@ -313,11 +313,11 @@ class GradientOptimizer(object):
                 xx += lr * grad
                 xx *= (1 - params.decay)
 
-                if params.blur_radius > 0:
+                if params.blur_every is not 0 and params.blur_radius > 0:
                     if params.blur_radius < .3:
                         print 'Warning: blur-radius of .3 or less works very poorly'
                         #raise Exception('blur-radius of .3 or less works very poorly')
-                    if params.blur_every is not None and ii % params.blur_every == 0:
+                    if ii % params.blur_every == 0:
                         for channel in range(3):
                             cimg = gaussian_filter(xx[0,channel], params.blur_radius)
                             xx[0,channel] = cimg
@@ -333,14 +333,14 @@ class GradientOptimizer(object):
 
                 if params.px_benefit_percentile > 0:
                     pred_0_benefit = grad * -xx
-                    px_benefit = pred_0_benefit.sum(1)
+                    px_benefit = pred_0_benefit.sum(1)   # sum over color channels
                     smallben = px_benefit < percentile(px_benefit, params.px_benefit_percentile)
                     smallben3 = tile(smallben[:,newaxis,:,:], (1,3,1,1))
                     xx = xx - xx*smallben3
 
                 if params.px_abs_benefit_percentile > 0:
                     pred_0_benefit = grad * -xx
-                    px_benefit = pred_0_benefit.sum(1)
+                    px_benefit = pred_0_benefit.sum(1)   # sum over color channels
                     smallaben = abs(px_benefit) < percentile(abs(px_benefit), params.px_abs_benefit_percentile)
                     smallaben3 = tile(smallaben[:,newaxis,:,:], (1,3,1,1))
                     xx = xx - xx*smallaben3

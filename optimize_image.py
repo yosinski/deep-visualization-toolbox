@@ -14,39 +14,74 @@ LR_POLICY_CHOICES = ('constant', 'progress', 'progress01')
 
 
 def get_parser():
-    parser = argparse.ArgumentParser(description='Finds images that activate a network in various ways.')
+    parser = argparse.ArgumentParser(description='Script to find, with or without regularization, images that cause high or low activations of specific neurons in a network via numerical optimization.',
+                                     formatter_class=lambda prog: argparse.ArgumentDefaultsHelpFormatter(prog, width=100)
+    )
 
     # Network and data options
-    parser.add_argument('--caffe_root', type = str, default = settings.caffevis_caffe_root)
-    parser.add_argument('--deploy_proto', type = str, default = settings.caffevis_deploy_prototxt)
-    parser.add_argument('--net_weights', type = str, default = settings.caffevis_network_weights)
-    parser.add_argument('--mean', type = str, default = settings.caffevis_data_mean)
-    parser.add_argument('--channel_swap_to_rgb', type = str, default = '(2,1,0)', help = 'Permutation to apply to channels to change to RGB space for plotting (Hint: (0,1,2) if your network is trained for RGB, (2,1,0) if it is trained fro BGR)')
-    parser.add_argument('--data_size', type = str, default = '(227,227)')
+    parser.add_argument('--caffe-root', type = str, default = settings.caffevis_caffe_root,
+                        help = 'Path to caffe root directory.')
+    parser.add_argument('--deploy-proto', type = str, default = settings.caffevis_deploy_prototxt,
+                        help = 'Path to caffe network prototxt.')
+    parser.add_argument('--net-weights', type = str, default = settings.caffevis_network_weights,
+                        help = 'Path to caffe network weights.')
+    parser.add_argument('--mean', type = str, default = settings.caffevis_data_mean,
+                        help = 'Path to mean image.')
+    parser.add_argument('--channel-swap-to-rgb', type = str, default = '(2,1,0)',
+                        help = 'Permutation to apply to channels to change to RGB space for plotting. Hint: (0,1,2) if your network is trained for RGB, (2,1,0) if it is trained for BGR.')
+    parser.add_argument('--data-size', type = str, default = '(227,227)',
+                        help = 'Size of network input.')
 
-    # FindParams
-    parser.add_argument('--start_at', type = str, default = 'mean_plus', choices = ('mean_plus', 'randu', 'zero'))
-    parser.add_argument('--rand_seed', type = int, default = 0)
-    parser.add_argument('--push_layer', type = str, default = 'prob', help = 'Which layer to push')
-    parser.add_argument('--push_channel', type = int, default = '278', help = 'Which channel to push')
-    parser.add_argument('--push_spatial', type = str, default = 'None', help = 'Which spatial location to push for conv layers. For FC layers, set this to None. For conv layers, set it to a tuple, e.g. when using `--push_layer conv5` on AlexNet, --push_spatial (6,6) will maximize the center unit of the 13x13 spatial grid.')
-    parser.add_argument('--push_dir', type = float, default = 1.0, help = 'Push direction, or value to initialize backprop with. Positive to maximize, negative to minimize.')
-    parser.add_argument('--decay', type = float, default = .01)
-    parser.add_argument('--blur_radius', type = float, default = 0)
-    parser.add_argument('--blur_every', type = int, default = 0)
-    parser.add_argument('--small_val_percentile', type = float, default = 0)
-    parser.add_argument('--small_norm_percentile', type = float, default = 0)
-    parser.add_argument('--px_benefit_percentile', type = float, default = 0)
-    parser.add_argument('--px_abs_benefit_percentile', type = float, default = 0)
-    parser.add_argument('--lr_policy', type = str, default = 'constant', choices = LR_POLICY_CHOICES)
-    parser.add_argument('--lr_params', type = str, default = '{"lr": .01}')
-    parser.add_argument('--max_iter', type = int, default = 300)
+    #### FindParams
 
-    # Results output options
-    parser.add_argument('--output_prefix', type = str, default = 'optimize_results/opt')
-    parser.add_argument('--output_template', type = str, default = '%(p.push_layer)s_%(p.push_channel)04d_%(p.rand_seed)d')
-    parser.add_argument('--brave', action = 'store_true', help = 'Allow overwriting existing results files. Default: cowardly refuse to overwrite, exiting instead.')
-    parser.add_argument('--skipbig', action = 'store_true', help = 'Skip outputting large *info_big.pkl files (contains pickled version of x0, last x, best x, first x that attained max on the specified layer')
+    # Where to start
+    parser.add_argument('--start-at', type = str, default = 'mean_plus_rand', choices = ('mean_plus_rand', 'randu', 'mean'),
+                        help = 'How to generate x0, the initial point used in optimization.')
+    parser.add_argument('--rand-seed', type = int, default = 0,
+                        help = 'Random seed used for generating the start-at image (use different seeds to generate different images).')
+
+    # What to optimize
+    parser.add_argument('--push-layer', type = str, default = 'fc8',
+                        help = 'Name of layer that contains the desired neuron whose value is optimized.')
+    parser.add_argument('--push-channel', type = int, default = '130',
+                        help = 'Channel number for desired neuron whose value is optimized (channel for conv, neuron index for FC).')
+    parser.add_argument('--push-spatial', type = str, default = 'None',
+                        help = 'Which spatial location to push for conv layers. For FC layers, set this to None. For conv layers, set it to a tuple, e.g. when using `--push-layer conv5` on AlexNet, --push-spatial (6,6) will maximize the center unit of the 13x13 spatial grid.')
+    parser.add_argument('--push-dir', type = float, default = 1,
+                        help = 'Which direction to push the activation of the selected neuron, that is, the value used to begin backprop. For example, use 1 to maximize the selected neuron activation and  -1 to minimize it.')
+
+    # Use regularization?
+    parser.add_argument('--decay', type = float, default = 0,
+                        help = 'Amount of L2 decay to use.')
+    parser.add_argument('--blur-radius', type = float, default = 0,
+                        help = 'Radius in pixels of blur to apply after each BLUR_EVERY steps. If 0, perform no blurring. Blur sizes between 0 and 0.3 work poorly.')
+    parser.add_argument('--blur-every', type = int, default = 0,
+                        help = 'Blur every BLUR_EVERY steps. If 0, perform no blurring.')
+    parser.add_argument('--small-val-percentile', type = float, default = 0,
+                        help = 'Induce sparsity by setting pixels with absolute value under SMALL_VAL_PERCENTILE percentile to 0. Not discussed in paper. 0 to disable.')
+    parser.add_argument('--small-norm-percentile', type = float, default = 0,
+                        help = 'Induce sparsity by setting pixels with norm under SMALL_NORM_PERCENTILE percentile to 0. \\theta_{n_pct} from the paper. 0 to disable.')
+    parser.add_argument('--px-benefit-percentile', type = float, default = 0,
+                        help = 'Induce sparsity by setting pixels with contribution under PX_BENEFIT_PERCENTILE percentile to 0. Mentioned briefly in paper but not used. 0 to disable.')
+    parser.add_argument('--px-abs-benefit-percentile', type = float, default = 0,
+                        help = 'Induce sparsity by setting pixels with contribution under PX_BENEFIT_PERCENTILE percentile to 0. \\theta_{c_pct} from the paper. 0 to disable.')
+
+    # How much to optimize
+    parser.add_argument('--lr-policy', type = str, default = 'constant', choices = LR_POLICY_CHOICES,
+                        help = 'Learning rate policy. See description in lr-params.')
+    parser.add_argument('--lr-params', type = str, default = '{"lr": 1}',
+                        help = 'Learning rate params, specified as a string that evalutes to a Python dict. Params that must be provided dependon which lr-policy is selected. The "constant" policy requires the "lr" key and uses the constant given learning rate. The "progress" policy requires the "max_lr" and "desired_prog" keys and scales the learning rate such that the objective function will change by an amount equal to DESIRED_PROG under a linear objective assumption, except the LR is limited to MAX_LR. The "progress01" policy requires the "max_lr", "early_prog", and "late_prog_mult" keys and is tuned for optimizing neurons with outputs in the [0,1] range, e.g. neurons on a softmax layer. Under this policy optimization slows down as the output approaches 1 (see code for details).')
+    parser.add_argument('--max-iter', type = int, default = 500,
+                        help = 'Number of iterations of the optimization loop.')
+
+    # Where to save results
+    parser.add_argument('--output-prefix', type = str, default = 'optimize_results/opt',
+                        help = 'Output path and filename prefix (default: optimize_results/opt)')
+    parser.add_argument('--output-template', type = str, default = '%(p.push_layer)s_%(p.push_channel)04d_%(p.rand_seed)d',
+                        help = 'Output filename template; see code for details (default: "%%(p.push_layer)s_%%(p.push_channel)04d_%%(p.rand_seed)d"). '
+                        'The default output-prefix and output-template produce filenames like "optimize_results/opt_prob_0278_0_best_X.jpg"')
+    parser.add_argument('--brave', action = 'store_true', help = 'Allow overwriting existing results files. Default: off, i.e. cowardly refuse to overwrite existing files.')
+    parser.add_argument('--skipbig', action = 'store_true', help = 'Skip outputting large *info_big.pkl files (contains pickled version of x0, last x, best x, first x that attained max on the specified layer.')
 
     return parser
 
