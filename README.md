@@ -25,8 +25,8 @@ Note: When compiling Caffe, you can set `CPU_ONLY := 1` in your `Makefile.config
 
 ### Step 1: Compile the deconv-deep-vis-toolbox branch of caffe
 
-Instead of using the master branch of caffe, to use the demo
-you'll need a slightly modified branch (supporting deconv and a few
+Instead of using the master branch of Caffe, to use the demo
+you'll need the slightly modified [deconv-deep-vis-toolbox Caffe branch](https://github.com/yosinski/caffe/tree/deconv-deep-vis-toolbox) (supporting deconv and a few
 extra Python bindings). Getting the branch and switching to it is easy.
 Starting from your caffe directory, run:
 
