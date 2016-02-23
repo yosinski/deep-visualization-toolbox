@@ -30,7 +30,7 @@ This produces a few files (with comments added):
     opt_fc8_0130_0_info.pkl             # pickle file containing all results (except images)
     opt_fc8_0130_0_info_big.pkl         # pickle file containing all results
 
-The two images saved (without and with mean added) look like this:
+The two images that are output (without and with mean added) look like this:
 
 ![Best X found](/doc/opt_fc8_0130_0_best_X.jpg?raw=true "Best X found")
 ![Best X found plus mean](/doc/opt_fc8_0130_0_best_Xpm.jpg?raw=true "Best X found plus mean")
@@ -87,7 +87,8 @@ The text file output is provided just for convenience. To process the fields pro
     ...     results = pickle.load(ff)
     ...
     >>> print results
-    (<optimize.gradient_optimizer.FindParams object at 0x105223a10>, <optimize.gradient_optimizer.FindResults object at 0x132c29550>)>>> find_params, find_results = results
+    (<optimize.gradient_optimizer.FindParams object at 0x105223a10>, <optimize.gradient_optimizer.FindResults object at 0x132c29550>)
+    >>> find_params, find_results = results
     >>> print find_params
     FindParams:
                         blur_every: 4
@@ -143,7 +144,7 @@ The text file output is provided just for convenience. To process the fields pro
 
 ## Full `optimize_image.py` script options
 
-Description of available options in `optimize_image.py` script (annotated output of `./optimize_image.py --help`):
+Below is a description of all available options in `optimize_image.py` script (annotated output of `./optimize_image.py --help`):
 
     usage: optimize_image.py [-h] [--caffe-root CAFFE_ROOT] [--deploy-proto DEPLOY_PROTO]
                              [--net-weights NET_WEIGHTS] [--mean MEAN]
