@@ -1,6 +1,19 @@
-# Deep Visualization Toolbox Installation
+# Deep Visualization Toolbox
+
+This is the code to run the Deep Visualization Toolbox. A general description is available [here](http://yosinski.com/deepvis). If you find this code useful, we encourage you to cite the following paper:
+
+ * Jason Yosinski, Jeff Clune, Anh Nguyen, Thomas Fuchs, and Hod Lipson. [Understanding neural networks through deep visualization](http://arxiv.org/abs/1506.06579). Presented at the Deep Learning Workshop, International Conference on Machine Learning (ICML), 2015.
+
+Bibtex:
+
+    @inproceedings{yosinski-2015-ICML-DL-understanding-neural-networks,
+    Author = {Jason Yosinski and Jeff Clune and Anh Nguyen and Thomas Fuchs and Hod Lipson},
+    Booktitle = {Deep Learning Workshop, International Conference on Machine Learning (ICML)},
+    Title = {Understanding Neural Networks Through Deep Visualization},
+    Year = {2015}}
 
 
+## Running the toolbox
 
 ### Step 0: Compile master branch of caffe (optional)
 
