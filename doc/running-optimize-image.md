@@ -2,7 +2,7 @@
 
 ## Reproducing paper results
 
-The optimization results in the paper may be reproduced using the `optimize_image.py` script. Table 1 of the paper gives four sets of recommended optimization hyperparameters. These may be implemented using the following combination of command line flags (in the same order as Table 1):
+The optimization results in the paper may be reproduced using the `optimize_image.py` script. Table 1 of the paper gives four sets of recommended regularization hyperparameters. These may be implemented using the following combination of command line flags (in the same order as Table 1):
 
     ./optimize_image.py --decay 0      --blur-radius 0.5 --blur-every 4  --small-norm-percentile 50     --max-iter 500  --lr-policy progress --lr-params "{'max_lr': 100.0, 'desired_prog': 2.0}"
     ./optimize_image.py --decay 0.3    --blur-radius 0   --blur-every 0  --small-norm-percentile 20     --max-iter 750  --lr-policy constant --lr-params "{'lr': 100.0}"
@@ -30,12 +30,12 @@ This produces a few files (with comments added):
     opt_fc8_0130_0_info.pkl             # pickle file containing all results (except images)
     opt_fc8_0130_0_info_big.pkl         # pickle file containing all results
 
-The two images that are output (without and with mean added) look like this:
+The two jpg images that are output (without and with mean added) look like this:
 
 ![Best X found](/doc/opt_fc8_0130_0_best_X.jpg?raw=true "Best X found")
 ![Best X found plus mean](/doc/opt_fc8_0130_0_best_Xpm.jpg?raw=true "Best X found plus mean")
 
-We can examine the `opt_fc8_0130_0_info.txt` file to see a record of the hyperparameters that were used and the optimization results:
+We can examine the `opt_fc8_0130_0_info.txt` file to see a record of the hyperparameters that were used and the results of the optimization:
 
     [deep-visualization-toolbox/optimize_results] $ cat opt_fc8_0130_0_info.txt
     FindParams:
