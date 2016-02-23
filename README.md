@@ -14,7 +14,7 @@ If you find this paper or code useful, we encourage you to cite the paper. Bibte
 
 ## Setting up and running the toolbox
 
-### Step 0: Compile master branch of caffe (optional)
+### Step 0: Compile master branch of caffe (optional but recommended)
 
 Get the master branch of [Caffe](http://caffe.berkeleyvision.org/) to compile on your
 machine. If you've never used Caffe before, it can take a bit of time to get all the required libraries in place. Fortunately, the [installation process is well documented](http://caffe.berkeleyvision.org/installation.html). When you're installing OpenCV, install the Python bindings as well (see Step 2 below).
@@ -99,14 +99,16 @@ Once the toolbox is running, push 'h' to show a help screen. You can also have a
 
 
 
-
 # Troubleshooting
 
 If you have any problems running the Deep Vis Toolbox, here are a few things to try:
 
- * Try using the `dev` branch instead (`git checkout dev`). Sometimes it's a little more up to date than the master branch.
+ * Make sure you can compile the master branch of Caffe (Step 0 above)! If you can't, see the [detailed compilation instructions for Caffe](http://caffe.berkeleyvision.org/installation.html). If you encounter issues, the [caffe-users](https://groups.google.com/forum/#!forum/caffe-users) mailing list is a good place to look for solutions others have found.
+ * Try using the `dev` branch of this toolbox instead (`git checkout dev`). Sometimes it's a little more up to date than the master branch.
  * If you get an error (`AttributeError: 'Classifier' object has no attribute 'backward_from_layer'`) when switching to backprop or deconv modes, it's because your compiled branch of Caffe does not have the necessary Python bindings for backprop/deconv. Follow the directions in "Step 1: Compile the deconv-deep-vis-toolbox branch of caffe" above.
  * If the backprop pane in the lower left is just gray, it's probably because backprop and deconv are producing all zeros. By default, Caffe won't compute derivatives at the data layer, because they're not needed to update parameters. The fix is simple: just add "force_backward: true" to your network prototxt, [like this](https://github.com/yosinski/deep-visualization-toolbox/blob/master/models/caffenet-yos/caffenet-yos-deploy.prototxt#L7).
+ * If the toolbox runs but the keys don't respond as expected, this may be because keys behave differently on different platforms. Run the `test_keys.py` script to test your bindings.
+ * If you're unsure if your `settings.py` file contains sane values, run `test_settings.py` to see if `settings.py` defines all the appropriate values and to see which have been changed vs. the included `settings.py.template`.
  * If none of that helps, feel free to [email me](http://yosinski.com/) or [submit an issue](https://github.com/yosinski/deep-visualization-toolbox/issues). I might have left out an important detail here or there :).
 
 If you're desperate, it's also possible to [run the toolbox on Amazon EC2](doc/deep-vis-on-aws.md), but display will be much slower and images can be loaded only from file (not from webcam).
