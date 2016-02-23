@@ -12,11 +12,12 @@ The optimization results in the paper may be reproduced using the `optimize_imag
 The hyperparameters given on the third line are the ones used for most of the image in the paper. This set of hyperparameters produced smooth images by using a wide 1 pixel radius blur applied every 4 steps. See below for a complete description of other available `optimize_image.py` options.
 
 
-## Example optimization results:
+## Example optimization output
 
 Using a fresh checkout with the default model downloaded, we can generate an image of a flamingo using the following command:
 
-    ./optimize_image.py --decay 0.0001 --blur-radius 1.0 --blur-every 4 \
+    ./optimize_image.py --push-layer fc8 --push-channel 130                  \
+        --decay 0.0001 --blur-radius 1.0 --blur-every 4                      \
         --max-iter 1000 --lr-policy constant --lr-params "{'lr': 100.0}"
         
 This produces a few files (with comments added):
@@ -28,6 +29,11 @@ This produces a few files (with comments added):
     opt_fc8_0130_0_info.txt             # text description of optimization parameters and results
     opt_fc8_0130_0_info.pkl             # pickle file containing all results (except images)
     opt_fc8_0130_0_info_big.pkl         # pickle file containing all results
+
+The two images saved (without and with mean added) look like this:
+
+![Best X found](/doc/opt_fc8_0130_0_best_X.jpg?raw=true "Best X found")
+![Best X found plus mean](/doc/opt_fc8_0130_0_best_Xpm.jpg?raw=true "Best X found plus mean")
 
 We can examine the `opt_fc8_0130_0_info.txt` file to see a record of the hyperparameters that were used and the optimization results:
 
@@ -71,13 +77,6 @@ We can examine the `opt_fc8_0130_0_info.txt` file to see a record of the hyperpa
                             obj: [-1.30543, -0.756828, ..., 63.5805, 68.1828]
                             std: [9.97384688005, 2.84414857575, ..., 1.62728852151, 1.6460861413]
                              x0: (3, 227, 227) array [17.6405234597, 4.00157208367, ...]
-
-We can also view the resulting images (saved at)
-
-    [deep-visualization-toolbox/optimize_results] $ open opt_fc8_0130_0_best_X.jpg opt_fc8_0130_0_best_Xpm.jpg
-
-![Best X found](/doc/opt_fc8_0130_0_best_X.jpg?raw=true "Best X found")
-![Best X found plus mean](/doc/opt_fc8_0130_0_best_Xpm.jpg?raw=true "Best X found plus mean")
 
 The text file output is provided just for convenience. To process the fields programmatically in Python, it's easiest to load and inspect the associated `opt_fc8_0130_0_info_big.pkl` file using the `pickle` module:
 
