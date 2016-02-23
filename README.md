@@ -19,7 +19,7 @@ If you find this paper or code useful, we encourage you to cite the paper. Bibte
 Get the master branch of [Caffe](http://caffe.berkeleyvision.org/) to compile on your
 machine. If you've never used Caffe before, it can take a bit of time to get all the required libraries in place. Fortunately, the [installation process is well documented](http://caffe.berkeleyvision.org/installation.html). When you're installing OpenCV, install the Python bindings as well (see Step 2 below).
 
-Note: You can set `CPU_ONLY := 1` in your `Makefile.config` to skip all the Cuda/GPU stuff. The Deep Visualization Toolbox can run with Caffe in either CPU or GPU mode.
+Note: When compiling Caffe, you can set `CPU_ONLY := 1` in your `Makefile.config` to skip all the Cuda/GPU stuff. The Deep Visualization Toolbox can run with Caffe in either CPU or GPU mode, and it's simpler to get Caffe to compile in `CPU_ONLY` mode.
 
 
 
@@ -41,19 +41,32 @@ As noted above, feel free to compile in `CPU_ONLY` mode if desired.
 
 
 
-### Step 2: Install python-opencv
+### Step 2: Install prerequisites
 
-You may have already installed the `python-opencv` bindings as part of the Caffe setup process. If `import cv2` works from Python, then you're all set. If not, install the bindings like this:
+The only prerequisites beyond those required for Caffe are `python-opencv` and `scipy`, which may be installed as follows (other install options exist as well):
 
-Ubuntu:
+#### Ubuntu:
 
     $ sudo apt-get install python-opencv
+    $ sudo apt-get install scipy
 
-Mac using [homebrew](http://brew.sh/) (if desired, add option `--with-tbb` to enable parallel code using Intel TBB):
+#### Mac using [homebrew](http://brew.sh/):
+
+Install `python-opencv` using one of the following two lines, depending on whether you want to compile using Intel TBB to enable parallel operations:
 
     $ brew install opencv
+    $ brew install --with-tbb opencv
 
-Other install options on Mac may also work well.
+Install `scipy` either with OpenBLAS...
+
+    $ brew install openblas
+    $ brew install --with-openblas scipy
+
+...or without it
+
+    $ brew install scipy
+
+You may have already installed the `python-opencv` bindings as part of the Caffe setup process. If `import cv2` works from Python, then you're all set. Similarly for `import scipy`.
 
 
 
