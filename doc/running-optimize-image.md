@@ -1,5 +1,7 @@
 # Producing optimized images
 
+## Reproducing paper results
+
 The optimization results in the paper may be reproduced using the `optimize_image.py` script. Table 1 of the paper gives four sets of recommended optimization hyperparameters. These may be implemented using the following combination of command line flags (in the same order as Table 1):
 
     ./optimize_image.py --decay 0      --blur-radius 0.5 --blur-every 4  --small-norm-percentile 50     --max-iter 500  --lr-policy progress --lr-params "{'max_lr': 100.0, 'desired_prog': 2.0}"
@@ -7,13 +9,140 @@ The optimization results in the paper may be reproduced using the `optimize_imag
     ./optimize_image.py --decay 0.0001 --blur-radius 1.0 --blur-every 4                                 --max-iter 1000 --lr-policy constant --lr-params "{'lr': 100.0}"
     ./optimize_image.py --decay 0      --blur-radius 0.5 --blur-every 4  --px-abs-benefit-percentile 90 --max-iter 1000 --lr-policy progress --lr-params "{'max_lr': 100000000, 'desired_prog': 2.0}"
 
-The hyperparameters given on the third line are the ones used for most of the image in the paper. This set of hyperparameters produced smooth images by using a wide 1 pixel radius blur applied every 4 steps.
-
-See below for a complete description of other available `optimize_image.py` options.
+The hyperparameters given on the third line are the ones used for most of the image in the paper. This set of hyperparameters produced smooth images by using a wide 1 pixel radius blur applied every 4 steps. See below for a complete description of other available `optimize_image.py` options.
 
 
+## Example optimization results:
 
-# Full optimize_image.py script options
+Using a fresh checkout with the default model downloaded, we can generate an image of a flamingo using the following command:
+
+    ./optimize_image.py --decay 0.0001 --blur-radius 1.0 --blur-every 4 \
+        --max-iter 1000 --lr-policy constant --lr-params "{'lr': 100.0}"
+        
+This produces a few files (with comments added):
+
+    [deep-visualization-toolbox] $ cd optimize_results/
+    [deep-visualization-toolbox/optimize_results] $ ls
+    opt_fc8_0130_0_best_X.jpg           # resulting image
+    opt_fc8_0130_0_best_Xpm.jpg         # resulting image plus mean image
+    opt_fc8_0130_0_info.txt             # text description of optimization parameters and results
+    opt_fc8_0130_0_info.pkl             # pickle file containing all results (except images)
+    opt_fc8_0130_0_info_big.pkl         # pickle file containing all results
+
+We can examine the `opt_fc8_0130_0_info.txt` file to see a record of the hyperparameters that were used and the optimization results:
+
+    [deep-visualization-toolbox/optimize_results] $ cat opt_fc8_0130_0_info.txt
+    FindParams:
+                     blur_every: 4
+                    blur_radius: 1.0
+                          decay: 0.0001
+                      lr_params: {'lr': 100.0}
+                      lr_policy: constant
+                       max_iter: 1000
+                   push_channel: 130
+                       push_dir: 1
+                     push_layer: fc8
+                   push_spatial: (0, 0)
+                      push_unit: (130, 0, 0)
+      px_abs_benefit_percentile: 0
+          px_benefit_percentile: 0
+                      rand_seed: 0
+          small_norm_percentile: 0
+           small_val_percentile: 0
+                       start_at: mean_plus_rand
+    
+    
+    FindResults:
+                        best_ii: 992
+                       best_obj: 71.1864
+                        best_xx: (3, 227, 227) array [0.505416410453, 0.499939193577, ...]
+                           dist: [1.9916364387e-12, 3413.05052366, ..., 3956.88723303, 3957.78892399]
+                         idxmax: [(330, 0, 0), (533, 0, 0), ..., (130, 0, 0), (130, 0, 0)]
+                             ii: [0, 1, ..., 998, 999]
+                          ismax: [False, False, ..., True, True]
+                        last_ii: 999
+                       last_obj: 68.1828
+                        last_xx: (3, 227, 227) array [0.506889683633, 0.501422513477, ...]
+                    majority_ii: 27
+                   majority_obj: 8.44836
+                    majority_xx: (3, 227, 227) array [3.81062396723, 3.28850835202, ...]
+                    meta_result: Metaresult: majority success
+                           norm: [3921.52364497, 1118.42893441, ..., 639.989254329, 647.378869524]
+                            obj: [-1.30543, -0.756828, ..., 63.5805, 68.1828]
+                            std: [9.97384688005, 2.84414857575, ..., 1.62728852151, 1.6460861413]
+                             x0: (3, 227, 227) array [17.6405234597, 4.00157208367, ...]
+
+We can also view the resulting images (saved at)
+
+    [deep-visualization-toolbox/optimize_results] $ open opt_fc8_0130_0_best_X.jpg opt_fc8_0130_0_best_Xpm.jpg
+
+![Best X found](/doc/opt_fc8_0130_0_best_X.jpg?raw=true "Best X found")
+![Best X found plus mean](/doc/opt_fc8_0130_0_best_Xpm.jpg?raw=true "Best X found plus mean")
+
+The text file output is provided just for convenience. To process the fields programmatically in Python, it's easiest to load and inspect the associated `opt_fc8_0130_0_info_big.pkl` file using the `pickle` module:
+
+    [deep-visualization-toolbox/optimize_results] $ cd ..
+    [deep-visualization-toolbox] $ python
+    >>> import pickle
+    >>> with open('optimize_results/opt_fc8_0130_0_info_big.pkl') as ff:
+    ...     results = pickle.load(ff)
+    ...
+    >>> print results
+    (<optimize.gradient_optimizer.FindParams object at 0x105223a10>, <optimize.gradient_optimizer.FindResults object at 0x132c29550>)>>> find_params, find_results = results
+    >>> print find_params
+    FindParams:
+                        blur_every: 4
+                       blur_radius: 1.0
+                             decay: 0.0001
+                         lr_params: {'lr': 100.0}
+                         lr_policy: constant
+                          max_iter: 1000
+                      push_channel: 130
+                          push_dir: 1
+                        push_layer: fc8
+                      push_spatial: (0, 0)
+                         push_unit: (130, 0, 0)
+         px_abs_benefit_percentile: 0
+             px_benefit_percentile: 0
+                         rand_seed: 0
+             small_norm_percentile: 0
+              small_val_percentile: 0
+                          start_at: mean_plus_rand
+    
+    >>> print find_results
+    FindResults:
+                           best_ii: 992
+                          best_obj: 71.1864
+                           best_xx: (3, 227, 227) array [0.505416410453, 0.499939193577, ...]
+                              dist: [1.9916364387e-12, 3413.05052366, ..., 3956.88723303, 3957.78892399]
+                            idxmax: [(330, 0, 0), (533, 0, 0), ..., (130, 0, 0), (130, 0, 0)]
+                                ii: [0, 1, ..., 998, 999]
+                             ismax: [False, False, ..., True, True]
+                           last_ii: 999
+                          last_obj: 68.1828
+                           last_xx: (3, 227, 227) array [0.506889683633, 0.501422513477, ...]
+                       majority_ii: 27
+                      majority_obj: 8.44836
+                       majority_xx: (3, 227, 227) array [3.81062396723, 3.28850835202, ...]
+                       meta_result: Metaresult: majority success
+                              norm: [3921.52364497, 1118.42893441, ..., 639.989254329, 647.378869524]
+                               obj: [-1.30543, -0.756828, ..., 63.5805, 68.1828]
+                               std: [9.97384688005, 2.84414857575, ..., 1.62728852151, 1.6460861413]
+                                x0: (3, 227, 227) array [17.6405234597, 4.00157208367, ...]
+    
+    >>> find_results.x0.shape
+    (3, 227, 227)
+    >>> find_results.last_xx.shape
+    (3, 227, 227)
+    >>> find_results.best_obj
+    71.186447
+    >>> max(find_results.obj)
+    71.186447
+    ...
+
+
+
+## Full `optimize_image.py` script options
 
 Description of available options in `optimize_image.py` script (annotated output of `./optimize_image.py --help`):
 
