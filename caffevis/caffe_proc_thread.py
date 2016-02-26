@@ -28,6 +28,10 @@ class CaffeProcThread(CodependentThread):
         frame = None
 
         import caffe
+        # Set the mode to CPU or GPU. Note: in the latest Caffe
+        # versions, there is one Caffe object *per thread*, so the
+        # mode must be set per thread! Here we set the mode for the
+        # CaffeProcThread thread; it is also set in the main thread.
         if self.mode_gpu:
             caffe.set_mode_gpu()
             print 'CaffeVisApp mode (in CaffeProcThread): GPU'
@@ -76,7 +80,7 @@ class CaffeProcThread(CodependentThread):
                 self.frames_processed_fwd += 1
                 im_small = cv2.resize(frame, self.input_dims)
                 with WithTimer('CaffeProcThread:forward', quiet = self.debug_level < 1):
-                    net_preproc_forward(self.net, im_small)
+                    net_preproc_forward(self.net, im_small, self.input_dims)
 
             if run_back:
                 diffs = self.net.blobs[backprop_layer].diff * 0

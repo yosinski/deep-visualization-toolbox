@@ -28,34 +28,17 @@ class CaffeVisApp(BaseApp):
         print 'Got settings', settings
         self.settings = settings
         self.bindings = key_bindings
-        
-        sys.path.insert(0, os.path.join(settings.caffevis_caffe_root, 'python'))
-        import caffe
 
-        try:
-            self._data_mean = np.load(settings.caffevis_data_mean)
-        except IOError:
-            print '\n\nCound not load mean file:', settings.caffevis_data_mean
-            print 'Ensure that the values in settings.py point to a valid model weights file, network'
-            print 'definition prototxt, and mean. To fetch a default model and mean file, use:\n'
-            print '$ cd models/caffenet-yos/'
-            print '$ ./fetch.sh\n\n'
-            raise
-        
-        # Crop center region (e.g. 227x227) if mean is larger (e.g. 256x256)
-        excess_h = self._data_mean.shape[1] - self.settings.caffevis_data_hw[0]
-        excess_w = self._data_mean.shape[2] - self.settings.caffevis_data_hw[1]
-        assert excess_h >= 0 and excess_w >= 0, 'mean should be at least as large as %s' % repr(self.settings.caffevis_data_hw)
-        self._data_mean = self._data_mean[:, (excess_h/2):(excess_h/2+self.settings.caffevis_data_hw[0]),
-                                          (excess_w/2):(excess_w/2+self.settings.caffevis_data_hw[1])]
         self._net_channel_swap = (2,1,0)
         self._net_channel_swap_inv = tuple([self._net_channel_swap.index(ii) for ii in range(len(self._net_channel_swap))])
-        self._range_scale = 1.0      # not needed; image comes in [0,255]
+        self._range_scale = 1.0      # not needed; image already in [0,255]
 
         # Set the mode to CPU or GPU. Note: in the latest Caffe
         # versions, there is one Caffe object *per thread*, so the
         # mode must be set per thread! Here we set the mode for the
-        # main thread.
+        # main thread; it is also separately set in CaffeProcThread.
+        sys.path.insert(0, os.path.join(settings.caffevis_caffe_root, 'python'))
+        import caffe
         if settings.caffevis_mode_gpu:
             caffe.set_mode_gpu()
             print 'CaffeVisApp mode (in main thread):     GPU'
@@ -65,11 +48,41 @@ class CaffeVisApp(BaseApp):
         self.net = caffe.Classifier(
             settings.caffevis_deploy_prototxt,
             settings.caffevis_network_weights,
-            mean = self._data_mean,
+            mean = None,                                 # Set to None for now, assign later         # self._data_mean,
             channel_swap = self._net_channel_swap,
             raw_scale = self._range_scale,
         )
 
+        if isinstance(settings.caffevis_data_mean, basestring):
+            # If the mean is given as a filename, load the file
+            try:
+                self._data_mean = np.load(settings.caffevis_data_mean)
+            except IOError:
+                print '\n\nCound not load mean file:', settings.caffevis_data_mean
+                print 'Ensure that the values in settings.py point to a valid model weights file, network'
+                print 'definition prototxt, and mean. To fetch a default model and mean file, use:\n'
+                print '$ cd models/caffenet-yos/'
+                print '$ ./fetch.sh\n\n'
+                raise
+            input_shape = self.net.blobs[self.net.inputs[0]].data.shape[-2:]   # e.g. 227x227
+            # Crop center region (e.g. 227x227) if mean is larger (e.g. 256x256)
+            excess_h = self._data_mean.shape[1] - input_shape[0]
+            excess_w = self._data_mean.shape[2] - input_shape[1]
+            assert excess_h >= 0 and excess_w >= 0, 'mean should be at least as large as %s' % repr(input_shape)
+            self._data_mean = self._data_mean[:, (excess_h/2):(excess_h/2+input_shape[0]),
+                                              (excess_w/2):(excess_w/2+input_shape[1])]
+        else:
+            # The mean has been given as a value or a tuple of values
+            self._data_mean = np.array(settings.caffevis_data_mean)
+            # Promote to shape C,1,1
+            while len(self._data_mean.shape) < 1:
+                self._data_mean = np.expand_dims(self._data_mean, -1)
+            
+            #if not isinstance(self._data_mean, tuple):
+            #    # If given as int/float: promote to tuple
+            #    self._data_mean = tuple(self._data_mean)
+        self.net.transformer.set_mean(self.net.inputs[0], self._data_mean)
+        
         check_force_backward_true(settings.caffevis_deploy_prototxt)
 
         self.labels = None
@@ -102,7 +115,7 @@ class CaffeVisApp(BaseApp):
             self.net_layer_info[key]['tiles_rc'] = get_tiles_height_width_ratio(blob_shape[1], self.settings.caffevis_layers_aspect_ratio)
             self.net_layer_info[key]['tile_rows'] = self.net_layer_info[key]['tiles_rc'][0]
             self.net_layer_info[key]['tile_cols'] = self.net_layer_info[key]['tiles_rc'][1]
-        
+
     def start(self):
         self.state = CaffeVisAppState(self.net, self.settings, self.bindings, self.net_layer_info)
         self.state.drawing_stale = True
@@ -220,7 +233,7 @@ class CaffeVisApp(BaseApp):
         clr_0 = to_255(self.settings.caffevis_class_clr_0)
         clr_1 = to_255(self.settings.caffevis_class_clr_1)
 
-        probs_flat = self.net.blobs['prob'].data.flatten()
+        probs_flat = self.net.blobs[self.settings.caffevis_prob_layer].data.flatten()
         top_5 = probs_flat.argsort()[-1:-6:-1]
 
         strings = []
@@ -230,7 +243,7 @@ class CaffeVisApp(BaseApp):
             text = '%.2f %s' % (prob, self.labels[idx])
             fs = FormattedString(text, defaults)
             #fs.clr = tuple([clr_1[ii]*prob/pmax + clr_0[ii]*(1-prob/pmax) for ii in range(3)])
-            fs.clr = tuple([clr_1[ii]*prob + clr_0[ii]*(1-prob) for ii in range(3)])
+            fs.clr = tuple([max(0,min(255,clr_1[ii]*prob + clr_0[ii]*(1-prob))) for ii in range(3)])
             strings.append([fs])   # Line contains just fs
 
         cv2_typeset_text(pane.data, strings, loc,
@@ -266,7 +279,9 @@ class CaffeVisApp(BaseApp):
                         fs.thick = self.settings.caffevis_control_thick_selected
             strings.append(fs)
 
-        cv2_typeset_text(pane.data, strings, loc)
+        cv2_typeset_text(pane.data, strings, loc,
+                         line_spacing = self.settings.caffevis_control_line_spacing,
+                         wrap = True)
 
     def _draw_status_pane(self, pane):
         pane.data[:] = to_255(self.settings.window_background)
@@ -280,7 +295,7 @@ class CaffeVisApp(BaseApp):
         status = StringIO.StringIO()
         with self.state.lock:
             print >>status, 'opt' if self.state.pattern_mode else ('back' if self.state.layers_show_back else 'fwd'),
-            print >>status, '%s_%d |' % (self.state.layer, self.state.selected_unit),
+            print >>status, '%s:%d |' % (self.state.layer, self.state.selected_unit),
             if not self.state.back_enabled:
                 print >>status, 'Back: off',
             else:
@@ -556,11 +571,11 @@ class CaffeVisApp(BaseApp):
         self.jpgvis_thread.debug_level = level
 
     def draw_help(self, help_pane, locy):
-        defaults = {'face':  getattr(cv2, self.settings.caffevis_help_face),
-                    'fsize': self.settings.caffevis_help_fsize,
-                    'clr':   to_255(self.settings.caffevis_help_clr),
-                    'thick': self.settings.caffevis_help_thick}
-        loc_base = self.settings.caffevis_help_loc[::-1]   # Reverse to OpenCV c,r order
+        defaults = {'face':  getattr(cv2, self.settings.help_face),
+                    'fsize': self.settings.help_fsize,
+                    'clr':   to_255(self.settings.help_clr),
+                    'thick': self.settings.help_thick}
+        loc_base = self.settings.help_loc[::-1]   # Reverse to OpenCV c,r order
         locx = loc_base[0]
 
         lines = []
@@ -595,6 +610,6 @@ class CaffeVisApp(BaseApp):
                           FormattedString(help_string, defaults)])
 
         locy = cv2_typeset_text(help_pane.data, lines, (locx, locy),
-                                line_spacing = self.settings.caffevis_help_line_spacing)
+                                line_spacing = self.settings.help_line_spacing)
 
         return locy

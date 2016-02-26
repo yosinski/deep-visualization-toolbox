@@ -19,10 +19,11 @@ from image_misc import cv2_imshow_rgb, FormattedString, cv2_typeset_text, to_255
 from bindings import bindings
 from input_fetcher import InputImageFetcher
 
-
+pane_debug_clr = (255, 64, 64)
 
 class ImproperlyConfigured(Exception):
     pass
+
 
 
 
@@ -65,6 +66,20 @@ class LiveVis(object):
         self.quit = False
         self.debug_level = 0
 
+        self.debug_pane_defaults = {
+            'face': getattr(cv2, self.settings.help_face),
+            'fsize': self.settings.help_fsize,
+            'clr': pane_debug_clr,
+            'thick': self.settings.help_thick
+        }
+        self.help_pane_defaults = {
+            'face': getattr(cv2, self.settings.help_face),
+            'fsize': self.settings.help_fsize,
+            'clr': to_255(self.settings.help_clr),
+            'thick': self.settings.help_thick
+        }
+
+        
     def init_window(self):
         cv2.namedWindow(self.window_name)
         max_i, max_j = 0, 0
@@ -77,6 +92,8 @@ class LiveVis(object):
             i_begin, j_begin, i_size, j_size = pane_dimensions
             max_i = max(max_i, i_begin + i_size)
             max_j = max(max_j, j_begin + j_size)
+            if pane_name in self.panes:
+                raise Exception('Duplicate pane name in settings: %s' % pane_name)
             self.panes[pane_name] = Pane(i_begin, j_begin, i_size, j_size)
         self.buffer_height = max_i
         self.buffer_width = max_j
@@ -204,6 +221,20 @@ class LiveVis(object):
 
             # Render buffer
             if imshow_needed:
+                # Only redraw pane debug if display will be updated
+                if hasattr(self.settings, 'debug_window_panes') and self.settings.debug_window_panes:
+                    for pane_name,pane in self.panes.iteritems():
+                        print pane_name, pane
+                        pane.data[:] = pane.data * .5
+                        line = [FormattedString('%s |' % pane_name, self.debug_pane_defaults),
+                                FormattedString('pos: %d,%d |' % (pane.i_begin, pane.j_begin), self.debug_pane_defaults),
+                                FormattedString('shape: %d,%d' % (pane.i_size, pane.j_size), self.debug_pane_defaults)]
+                        cv2_typeset_text(pane.data, line, (5,20), line_spacing = 5, wrap = True)
+                        pane.data[:1,:] = pane_debug_clr
+                        pane.data[-1:,:] = pane_debug_clr
+                        pane.data[:,:1] = pane_debug_clr
+                        pane.data[:,-1:] = pane_debug_clr
+
                 with WithTimer('LiveVis:imshow', quiet = self.debug_level < 1):
                     if self.help_mode:
                         # Copy main buffer to help buffer
@@ -291,12 +322,8 @@ class LiveVis(object):
         self.help_buffer[:] = self.help_buffer[:] * .7
         self.help_pane.data[:] = self.help_pane.data[:] * .7
         
-        defaults = {'face': getattr(cv2, self.settings.caffevis_help_face),
-                    'fsize': self.settings.caffevis_help_fsize,
-                    'clr': to_255(self.settings.caffevis_help_clr),
-                    'thick': self.settings.caffevis_help_thick}
-        loc = self.settings.caffevis_help_loc[::-1]   # Reverse to OpenCV c,r order
-
+        loc = self.settings.help_loc[::-1]   # Reverse to OpenCV c,r order
+        defaults = self.help_pane_defaults
         lines = []
         lines.append([FormattedString('~ ~ ~ Deep Visualization Toolbox ~ ~ ~', defaults, align='center', width=self.help_pane.j_size)])
         lines.append([FormattedString('', defaults)])
@@ -309,7 +336,7 @@ class LiveVis(object):
                           FormattedString(help_string, defaults)])
 
         locy = cv2_typeset_text(self.help_pane.data, lines, loc,
-                                line_spacing = self.settings.caffevis_help_line_spacing)
+                                line_spacing = self.settings.help_line_spacing)
 
         for app_name, app in self.apps.iteritems():
             locy = app.draw_help(self.help_pane, locy)

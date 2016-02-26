@@ -4,6 +4,7 @@ import cv2
 import numpy as np
 import skimage
 import skimage.io
+from copy import deepcopy
 
 from misc import WithTimer
 
@@ -372,22 +373,30 @@ class FormattedString(object):
         self.align = align if align else defaults.get('align', 'left')
         
 
-def cv2_typeset_text(data, lines, loc, between = ' ', string_spacing = 0, line_spacing = 0):
+def cv2_typeset_text(data, lines, loc, between = ' ', string_spacing = 0, line_spacing = 0, wrap = False):
     '''Typesets mutliple strings on multiple lines of text, where each string may have its own formatting.
 
     Given:
     data: as in cv2.putText
     loc: as in cv2.putText
-    lines: list of lists of FormattedString objects
+    lines: list of lists of FormattedString objects, may be modified by this function!
     between: what to insert between each string on each line, ala str.join
     string_spacing: extra spacing to insert between strings on a line
     line_spacing: extra spacing to insert between lines
+    wrap: if true, wraps words to next line
 
     Returns:
     locy: new y location = loc[1] + y-offset resulting from lines of text
     '''
 
-    assert isinstance(lines, list), 'lines must be a list of lines or list of strings'
+    data_width = data.shape[1]
+
+    #lines_modified = False
+    #lines = lines_in    # will be deepcopied if modification is needed later
+
+    if isinstance(lines, FormattedString):
+        lines = [lines]
+    assert isinstance(lines, list), 'lines must be a list of lines or list of FormattedString objects or a single FormattedString object'
     if len(lines) == 0:
         return loc[1]
     if not isinstance(lines[0], list):
@@ -395,8 +404,10 @@ def cv2_typeset_text(data, lines, loc, between = ' ', string_spacing = 0, line_s
         lines = [lines]
     
     locy = loc[1]
-    
-    for line in lines:
+
+    line_num = 0
+    while line_num < len(lines):
+        line = lines[line_num]
         maxy = 0
         locx = loc[0]
         for ii,fs in enumerate(line):
@@ -409,6 +420,21 @@ def cv2_typeset_text(data, lines, loc, between = ' ', string_spacing = 0, line_s
                     locx += fs.width - boxsize[0]
                 elif fs.align == 'center':
                     locx += (fs.width - boxsize[0])/2
+            #print 'right boundary is', locx + boxsize[0], '(%s)' % fs.string
+                    #                print 'HERE'
+            right_edge = locx + boxsize[0]
+            if wrap and ii > 0 and right_edge > data_width:
+                # Wrap rest of line to the next line
+                #if not lines_modified:
+                #    lines = deepcopy(lines_in)
+                #    lines_modified = True
+                new_this_line = line[:ii]
+                new_next_line = line[ii:]
+                lines[line_num] = new_this_line
+                lines.insert(line_num+1, new_next_line)
+                break
+                ###line_num += 1
+                ###continue    
             cv2.putText(data, fs.string, (locx,locy), fs.face, fs.fsize, fs.clr, fs.thick)
             maxy = max(maxy, boxsize[1])
             if fs.width is not None:
@@ -421,6 +447,7 @@ def cv2_typeset_text(data, lines, loc, between = ' ', string_spacing = 0, line_s
             else:
                 locx += boxsize[0]
             locx += string_spacing
+        line_num += 1
         locy += maxy + line_spacing
         
     return locy

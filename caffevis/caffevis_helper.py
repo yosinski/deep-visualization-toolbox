@@ -4,8 +4,9 @@ from image_misc import get_tiles_height_width, caffe_load_image
 
 
 
-def net_preproc_forward(net, img):
-    assert img.shape == (227,227,3), 'img is wrong size'
+def net_preproc_forward(net, img, data_hw):
+    appropriate_shape = data_hw + (3,)
+    assert img.shape == appropriate_shape, 'img is wrong size (got %s but expected %s)' % (img.shape, appropriate_shape)
     #resized = caffe.io.resize_image(img, net.image_dims)   # e.g. (227, 227, 3)
     data_blob = net.transformer.preprocess('data', img)                # e.g. (3, 227, 227), mean subtracted and scaled to [0,255]
     data_blob = data_blob[np.newaxis,:,:,:]                   # e.g. (1, 3, 227, 227)
@@ -14,7 +15,22 @@ def net_preproc_forward(net, img):
 
 
 def get_pretty_layer_name(settings, layer_name):
-    return settings.caffevis_layer_pretty_names.get(layer_name, layer_name)
+    has_old_settings = hasattr(settings, 'caffevis_layer_pretty_names')
+    has_new_settings = hasattr(settings, 'caffevis_layer_pretty_name_dict') or hasattr(settings, 'caffevis_layer_pretty_name_fn')
+    if has_old_settings and not has_new_settings:
+        print ('WARNING: Your settings.py is out of date. caffevis_layer_pretty_names '
+               'has been replaced with caffevis_layer_pretty_name_{dict,fn}. Update '
+               'your settings.py (see settings.py.template) to remove this warning.')
+        return settings.caffevis_layer_pretty_names.get(layer_name, layer_name)
+
+    ret = layer_name
+    if hasattr(settings, 'caffevis_layer_pretty_name_dict'):
+        ret = settings.caffevis_layer_pretty_name_dict.get(layer_name, layer_name)
+    if hasattr(settings, 'caffevis_layer_pretty_name_fn'):
+        ret = settings.caffevis_layer_pretty_name_fn(ret)
+    if ret != layer_name:
+        print '  Prettified layer name: "%s" -> "%s"' % (layer_name, ret)
+    return ret
 
 
 def read_label_file(filename):

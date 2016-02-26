@@ -6,8 +6,9 @@ from bindings import bindings
 try:
     import settings
 except:
-    print '\nCould not import settings from settings.py. You should first copy'
-    print 'settings.py.template to settings.py and edit the caffevis_caffe_root'
+    print '\nError importing settings.py. Check the error message below for more information'
+    print "If you haven't already, you'll want to copy one of the settings_local.py.template files"
+    print 'to settings_local.py, settings.py.template to settings.py and edit the caffevis_caffe_root'
     print 'variable to point to your caffe path.'
     print
     print '  $ cp settings.py.template settings.py'
