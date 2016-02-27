@@ -4,29 +4,27 @@
 set -e
 
 function fetch_file() {
-    url_base="$1"
-    filename="$2"
-    url="$url_base/$filename"
+    filename="$1"
+    url="$2"
     if [ -e "$filename" ]; then
         echo "$url: file already downloaded (remove $filename to force re-download)"
     else
         echo "$url: fetching..."
-        wget "$url"
+        wget -O "$filename" "$url"
         echo "$url: done."
     fi
 }
 
 function fetch_and_extract() {
-    url_base="$1"
-    filename="$2"
+    filename="$1"
+    url="$2"
     dir="$3"
     example_filename="$4"
-    url="$url_base/$filename"
     example_path="$dir/$example_filename"
     if [ -e "$example_path" ]; then
         echo "$url: $example_path already exists, skipping."
     else
-        fetch_file "$url_base" "$filename"
+        fetch_file "$filename" "$url"
         echo "$url: extracting..."
         mkdir -p "$dir"
         tar -C "$dir" -xzf "$filename"
@@ -34,4 +32,4 @@ function fetch_and_extract() {
     fi
 }
 
-fetch_file http://dl.caffe.berkeleyvision.org/ bvlc_googlenet.caffemodel
+fetch_file bvlc-googlenet.caffemodel http://dl.caffe.berkeleyvision.org/bvlc_googlenet.caffemodel

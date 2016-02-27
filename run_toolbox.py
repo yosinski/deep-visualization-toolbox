@@ -6,13 +6,12 @@ from bindings import bindings
 try:
     import settings
 except:
-    print '\nError importing settings.py. Check the error message below for more information'
-    print "If you haven't already, you'll want to copy one of the settings_local.py.template files"
-    print 'to settings_local.py, settings.py.template to settings.py and edit the caffevis_caffe_root'
-    print 'variable to point to your caffe path.'
+    print '\nError importing settings.py. Check the error message below for more information.'
+    print "If you haven't already, you'll want to copy one of the settings_local.template-*.py files"
+    print 'to settings_local.py and edit it to point to your caffe checkout. E.g. via:'
     print
-    print '  $ cp settings.py.template settings.py'
-    print '  $ < edit settings.py >\n'
+    print '  $ cp models/caffenet-yos/settings_local.template-caffenet-yos.py settings_local.py'
+    print '  $ < edit settings_local.py >\n'
     raise
 
 if not os.path.exists(settings.caffevis_caffe_root):

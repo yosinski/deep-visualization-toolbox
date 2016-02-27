@@ -102,7 +102,7 @@ _.add_multikey('sel_layer_right', ['o', 'O'],
 _.add('zoom_mode', 'z',
        'Cycle zooming through {currently selected unit, backprop results, none}')
 _.add('pattern_mode', 's',
-       'Toggle overlay of preferred input stimulus (regularized optimized images)')
+       'Toggle overlay of preferred input pattern (regularized optimized images)')
 
 _.add('ez_back_mode_loop', 'b',
        'Cycle through a few common backprop/deconv modes')

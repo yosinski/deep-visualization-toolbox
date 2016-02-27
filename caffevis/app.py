@@ -71,6 +71,8 @@ class CaffeVisApp(BaseApp):
             assert excess_h >= 0 and excess_w >= 0, 'mean should be at least as large as %s' % repr(input_shape)
             self._data_mean = self._data_mean[:, (excess_h/2):(excess_h/2+input_shape[0]),
                                               (excess_w/2):(excess_w/2+input_shape[1])]
+        elif settings.caffevis_data_mean is None:
+            self._data_mean = None
         else:
             # The mean has been given as a value or a tuple of values
             self._data_mean = np.array(settings.caffevis_data_mean)
@@ -81,7 +83,8 @@ class CaffeVisApp(BaseApp):
             #if not isinstance(self._data_mean, tuple):
             #    # If given as int/float: promote to tuple
             #    self._data_mean = tuple(self._data_mean)
-        self.net.transformer.set_mean(self.net.inputs[0], self._data_mean)
+        if self._data_mean is not None:
+            self.net.transformer.set_mean(self.net.inputs[0], self._data_mean)
         
         check_force_backward_true(settings.caffevis_deploy_prototxt)
 
@@ -221,7 +224,7 @@ class CaffeVisApp(BaseApp):
     def _draw_prob_labels_pane(self, pane):
         '''Adds text label annotation atop the given pane.'''
 
-        if not self.labels or not self.state.show_label_predictions:
+        if not self.labels or not self.state.show_label_predictions or not self.settings.caffevis_prob_layer:
             return
 
         #pane.data[:] = to_255(self.settings.window_background)
@@ -294,7 +297,7 @@ class CaffeVisApp(BaseApp):
 
         status = StringIO.StringIO()
         with self.state.lock:
-            print >>status, 'opt' if self.state.pattern_mode else ('back' if self.state.layers_show_back else 'fwd'),
+            print >>status, 'pattern' if self.state.pattern_mode else ('back' if self.state.layers_show_back else 'fwd'),
             print >>status, '%s:%d |' % (self.state.layer, self.state.selected_unit),
             if not self.state.back_enabled:
                 print >>status, 'Back: off',
@@ -337,23 +340,28 @@ class CaffeVisApp(BaseApp):
             if self.settings.caffevis_jpgvis_remap and self.state.layer in self.settings.caffevis_jpgvis_remap:
                 load_layer = self.settings.caffevis_jpgvis_remap[self.state.layer]
 
-            jpg_path = os.path.join(self.settings.caffevis_unit_jpg_dir,
-                                    'regularized_opt', load_layer, 'whole_layer.jpg')
+            
+            if self.settings.caffevis_jpgvis_layers and load_layer in self.settings.caffevis_jpgvis_layers:
+                jpg_path = os.path.join(self.settings.caffevis_unit_jpg_dir,
+                                        'regularized_opt', load_layer, 'whole_layer.jpg')
 
-            # Get highres version
-            cache_before = str(self.img_cache)
-            display_3D_highres = self.img_cache.get((jpg_path, 'whole'), None)
-            if display_3D_highres is None:
-                try:
-                    with WithTimer('CaffeVisApp:load_sprite_image', quiet = self.debug_level < 1):
-                        display_3D_highres = load_square_sprite_image(jpg_path, n_sprites = n_tiles)
-                except IOError:
-                    # File does not exist, so just display disabled.
-                    pass
-                else:
-                    self.img_cache.set((jpg_path, 'whole'), display_3D_highres)
-            cache_after = str(self.img_cache)
-            #print 'Cache was / is:\n  %s\n  %s' % (cache_before, cache_after)
+                # Get highres version
+                #cache_before = str(self.img_cache)
+                display_3D_highres = self.img_cache.get((jpg_path, 'whole'), None)
+                #else:
+                #    display_3D_highres = None
+
+                if display_3D_highres is None:
+                    try:
+                        with WithTimer('CaffeVisApp:load_sprite_image', quiet = self.debug_level < 1):
+                            display_3D_highres = load_square_sprite_image(jpg_path, n_sprites = n_tiles)
+                    except IOError:
+                        # File does not exist, so just display disabled.
+                        pass
+                    else:
+                        self.img_cache.set((jpg_path, 'whole'), display_3D_highres)
+                #cache_after = str(self.img_cache)
+                #print 'Cache was / is:\n  %s\n  %s' % (cache_before, cache_after)
 
             if display_3D_highres is not None:
                 # Get lowres version, maybe. Assume we want at least one pixel for selection border.
@@ -526,14 +534,15 @@ class CaffeVisApp(BaseApp):
             # Some may be missing this setting
             self.settings.caffevis_jpgvis_layers
         except:
-            print '\n\nNOTE: you need to upgrade your settings.py file from the latest settings.py.template\n\n'
+            print '\n\nNOTE: you need to upgrade your settings.py and settings_local.py files. See README.md.\n\n'
             raise
             
-        if self.settings.caffevis_jpgvis_layers and state_layer in self.settings.caffevis_jpgvis_layers and cursor_area == 'bottom' and show_unit_jpgs:
-            if self.settings.caffevis_jpgvis_remap and state_layer in self.settings.caffevis_jpgvis_remap:
-                img_key_layer = self.settings.caffevis_jpgvis_remap[state_layer]
-            else:
-                img_key_layer = state_layer
+        if self.settings.caffevis_jpgvis_remap and state_layer in self.settings.caffevis_jpgvis_remap:
+            img_key_layer = self.settings.caffevis_jpgvis_remap[state_layer]
+        else:
+            img_key_layer = state_layer
+
+        if self.settings.caffevis_jpgvis_layers and img_key_layer in self.settings.caffevis_jpgvis_layers and cursor_area == 'bottom' and show_unit_jpgs:
             img_key = (img_key_layer, state_selected_unit, pane.data.shape)
             img_resize = self.img_cache.get(img_key, None)
             if img_resize is None:
