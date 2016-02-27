@@ -1,6 +1,7 @@
 # Define critical settings and/or override defaults specified in
 # settings.py. Copy this file to settings_local.py in the same
-# directory as settings.py and edit.
+# directory as settings.py and edit. Any settings defined here
+# will override those defined in settings.py
 
 
 
@@ -25,6 +26,8 @@ caffevis_jpgvis_remap    = {'pool1': 'conv1', 'pool2': 'conv2', 'pool5': 'conv5'
 def caffevis_layer_pretty_name_fn(name):
     return name.replace('pool','p').replace('norm','n')
 
+# Use GPU? Default is True.
+#caffevis_mode_gpu = True
 # Display tweaks.
 # Scale all window panes in UI by this factor
 #global_scale = 1.0

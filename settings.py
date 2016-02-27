@@ -155,7 +155,7 @@ help_thick = locals().get('help_thick', 1)
 ####################################
 
 # Whether to use GPU mode (if True) or CPU mode (if False)
-caffevis_mode_gpu        = locals().get('caffevis_mode_gpu', True)
+caffevis_mode_gpu = locals().get('caffevis_mode_gpu', True)
 
 # Data mean, if any, to be subtracted from input image file / webcam
 # image. Specify as string path to file or tuple of one value per

@@ -1,6 +1,7 @@
 # Define critical settings and/or override defaults specified in
 # settings.py. Copy this file to settings_local.py in the same
-# directory as settings.py and edit.
+# directory as settings.py and edit. Any settings defined here
+# will override those defined in settings.py
 
 
 
@@ -40,9 +41,11 @@ window_panes = (
     ('caffevis_control', (  0,  300,   _control_height, 1200)),
     ('caffevis_layers',  ( _control_height,  300,  900 - _control_height, 1200)),
 )
-caffevis_layers_aspect_ratio = float(window_panes[-1][3])/window_panes[-1][2]  # Actual ratio from caffevis_layers
+caffevis_layers_aspect_ratio = float(window_panes[-1][1][3])/window_panes[-1][1][2]  # Actual ratio from caffevis_layers
 caffevis_control_fsize = .85
 
+# Use GPU? Default is True.
+#caffevis_mode_gpu = True
 # Display tweaks.
 # Scale all window panes in UI by this factor
 #global_scale = 1.0
