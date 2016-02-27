@@ -1,10 +1,11 @@
 # Deep Visualization Toolbox
 
-This is the code required to run the Deep Visualization Toolbox, as well as to generate the neuron-by-neuron visualizations using regularized optimization as described casually [here](http://yosinski.com/deepvis) and more formally in this paper:
+This is the code required to run the Deep Visualization Toolbox, as well as to generate the neuron-by-neuron visualizations using regularized optimization.
+The toolbox and methods are described casually [here](http://yosinski.com/deepvis) and more formally in this paper:
 
  * Jason Yosinski, Jeff Clune, Anh Nguyen, Thomas Fuchs, and Hod Lipson. [Understanding neural networks through deep visualization](http://arxiv.org/abs/1506.06579). Presented at the Deep Learning Workshop, International Conference on Machine Learning (ICML), 2015.
 
-If you find this paper or code useful, we encourage you to cite the paper. Bibtex:
+If you find this paper or code useful, we encourage you to cite the paper. BibTeX:
 
     @inproceedings{yosinski-2015-ICML-DL-understanding-neural-networks,
     Author = {Jason Yosinski and Jeff Clune and Anh Nguyen and Thomas Fuchs and Hod Lipson},
@@ -16,10 +17,10 @@ If you find this paper or code useful, we encourage you to cite the paper. Bibte
 
 ### Step 0: Compile master branch of caffe (optional but recommended)
 
-Get the master branch of [Caffe](http://caffe.berkeleyvision.org/) to compile on your
-machine. If you've never used Caffe before, it can take a bit of time to get all the required libraries in place. Fortunately, the [installation process is well documented](http://caffe.berkeleyvision.org/installation.html). When you're installing OpenCV, install the Python bindings as well (see Step 2 below).
+Checkout the master branch of [Caffe](http://caffe.berkeleyvision.org/) and compile it on your
+machine. If you've never used Caffe before, it can take a bit of time to get all the required libraries in place. Fortunately, the [installation process is well documented](http://caffe.berkeleyvision.org/installation.html). When you're installing the OpenCV dependency, install the Python bindings as well (see Step 2 below).
 
-Note: When compiling Caffe, you can set `CPU_ONLY := 1` in your `Makefile.config` to skip all the Cuda/GPU stuff. The Deep Visualization Toolbox can run with Caffe in either CPU or GPU mode, and it's simpler to get Caffe to compile in `CPU_ONLY` mode.
+Note: When compiling Caffe, you can set `CPU_ONLY := 1` in your `Makefile.config` to skip all the Cuda/GPU stuff. The Deep Visualization Toolbox can run with Caffe in either CPU or GPU mode, and it's simpler to get Caffe to compile for the first time in `CPU_ONLY` mode.
 
 
 
@@ -28,7 +29,7 @@ Note: When compiling Caffe, you can set `CPU_ONLY := 1` in your `Makefile.config
 Instead of using the master branch of Caffe, to use the demo
 you'll need the slightly modified [deconv-deep-vis-toolbox Caffe branch](https://github.com/yosinski/caffe/tree/deconv-deep-vis-toolbox) (supporting deconv and a few
 extra Python bindings). Getting the branch and switching to it is easy.
-Starting from your caffe directory, run:
+Starting from your Caffe directory (that is, the directory where you've checked out Caffe, *not* the directory where you've checked out the DeepVis Toolbox), run:
 
     $ git remote add yosinski https://github.com/yosinski/caffe.git
     $ git fetch --all
@@ -37,7 +38,7 @@ Starting from your caffe directory, run:
     $ make -j
     $ make -j pycaffe
 
-As noted above, feel free to compile in `CPU_ONLY` mode if desired.
+As noted above, feel free to compile in `CPU_ONLY` mode.
 
 
 
@@ -77,15 +78,22 @@ You can put it wherever you like:
     $ git clone https://github.com/yosinski/deep-visualization-toolbox
     $ cd deep-visualization-toolbox
 
-Copy `settings.py.template` to `settings.py` and edit it so the `caffevis_caffe_root` variable points to the directory where you've compiled caffe in Step 1:
+The settings in the latest version of the toolbox (February 2016) work a bit differently than in earlier versions (April 2015). If you have the latest version (recommended!), 
+the minimal steps are to create a `settings_local.py` file using the template for the default `caffenet-yos` model:
 
-    $ cp settings.py.template settings.py
-    $ < edit settings.py >
+    $ cp models/caffenet-yos/settings_local.template-caffenet-yos.py settings_local.py
 
-Download the example model weights and corresponding top-9 visualizations saved as jpg (downloads a 230MB model and 1.1GB of jpgs to show as visualization):
+And then edit the `settings_local.py` file to make the `caffevis_caffe_root` variable point to the directory where you've compiled caffe in Step 1:
+
+    $ < edit settings_local.py >
+
+*Note on settings:* Settings are now split into two files: a versioned `settings.py` file that provides documentation and default values for all settings and an unversioned `settings_local.py` file. This latter file allows you to override any default setting to tailor the toolbox to your specific setup (Caffe path, CPU vs. GPU, webcam device, etc) and model (model weights, prototxt, sizes of the various panels shown in the toolbox, etc). This also makes it easy to distribute settings tweaks alongside models: for example, `models/bvlc-googlenet/settings_local.template-bvlc-googlenet.py` includes the appropriate window pane sizes and so on for the `bvlc-googlenet` model. To load a new model, just change the details in `settings_local.py`, perhaps by copying from the included template.
+
+Finally, download the default model weights and corresponding top-9 visualizations saved as jpg (downloads a 230MB model and 1.1GB of jpgs to show as visualization):
 
     $ cd models/caffenet-yos/
     $ ./fetch.sh
+    $ cd ../..
 
 
 
@@ -95,7 +103,7 @@ Simple:
 
     $ ./run_toolbox.py
 
-Once the toolbox is running, push 'h' to show a help screen. You can also have a look at `bindings.py` to see what the various keys do. If the window is too large or too small for your screen, set the `global_scale` variable in `settings.py` to a value smaller or larger than 1.0.
+Once the toolbox is running, push 'h' to show a help screen. You can also have a look at `bindings.py` to see what the various keys do. If the window is too large or too small for your screen, set the `global_scale` and `global_font_size` variables in `settings_local.py` to values smaller or larger than 1.0.
 
 
 
