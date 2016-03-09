@@ -170,15 +170,19 @@ Below is a description of all available options in `optimize_image.py` script (a
 Which trained network to load
 
       --caffe-root CAFFE_ROOT
-                            Path to caffe root directory. (default: /Users/jason/s/caffe2)
+                            Path to caffe root directory. (default: <read from settings>)
       --deploy-proto DEPLOY_PROTO
-                            Path to caffe network prototxt. (default: /Users/jason/s/deep-visualization-
-                            toolbox/models/caffenet-yos/caffenet-yos-deploy.prototxt)
+                            Path to caffe network prototxt. (default: <read from settings>)
       --net-weights NET_WEIGHTS
-                            Path to caffe network weights. (default: /Users/jason/s/deep-visualization-
-                            toolbox/models/caffenet-yos/caffenet-yos-weights)
-      --mean MEAN           Path to mean image. (default: /Users/jason/s/deep-visualization-
-                            toolbox/models/caffenet-yos/ilsvrc_2012_mean.npy)
+                            Path to caffe network weights. (default: <read from settings>)
+      --mean MEAN           Mean. The mean may be None, a tuple of one mean value per channel, or a
+                            string specifying the path to a mean image to load. Because of the multiple
+                            datatypes supported, this argument must be specified as a string that
+                            evaluates to a valid Python object. For example: "None", "(10,20,30)", and
+                            "'mean.npy'" are all valid values. Note that to specify a string path to a
+                            mean file, it must be passed with quotes, which usually entails passing it
+                            with double quotes in the shell! Alternately, just provide the mean in
+                            settings_local.py. (default: <read from settings>)
       --channel-swap-to-rgb CHANNEL_SWAP_TO_RGB
                             Permutation to apply to channels to change to RGB space for plotting. Hint:
                             (0,1,2) if your network is trained for RGB, (2,1,0) if it is trained for

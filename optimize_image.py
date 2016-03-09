@@ -14,7 +14,7 @@ LR_POLICY_CHOICES = ('constant', 'progress', 'progress01')
 
 
 def get_parser():
-    parser = argparse.ArgumentParser(description='Script to find, with or without regularization, images that cause high or low activations of specific neurons in a network via numerical optimization.',
+    parser = argparse.ArgumentParser(description='Script to find, with or without regularization, images that cause high or low activations of specific neurons in a network via numerical optimization. Settings are read from settings.py, overridden in settings_local.py, and may be further overridden on the command line.',
                                      formatter_class=lambda prog: argparse.ArgumentDefaultsHelpFormatter(prog, width=100)
     )
 
@@ -25,8 +25,8 @@ def get_parser():
                         help = 'Path to caffe network prototxt.')
     parser.add_argument('--net-weights', type = str, default = settings.caffevis_network_weights,
                         help = 'Path to caffe network weights.')
-    parser.add_argument('--mean', type = str, default = settings.caffevis_data_mean,
-                        help = 'Path to mean image.')
+    parser.add_argument('--mean', type = str, default = repr(settings.caffevis_data_mean),
+                        help = '''Mean. The mean may be None, a tuple of one mean value per channel, or a string specifying the path to a mean image to load. Because of the multiple datatypes supported, this argument must be specified as a string that evaluates to a valid Python object. For example: "None", "(10,20,30)", and "'mean.npy'" are all valid values. Note that to specify a string path to a mean file, it must be passed with quotes, which usually entails passing it with double quotes in the shell! Alternately, just provide the mean in settings_local.py.''')
     parser.add_argument('--channel-swap-to-rgb', type = str, default = '(2,1,0)',
                         help = 'Permutation to apply to channels to change to RGB space for plotting. Hint: (0,1,2) if your network is trained for RGB, (2,1,0) if it is trained for BGR.')
     parser.add_argument('--data-size', type = str, default = '(227,227)',
@@ -145,21 +145,35 @@ def main():
     push_spatial = parse_and_validate_push_spatial(parser, args.push_spatial)
     
     # Load mean
-    try:
-        data_mean = np.load(args.mean)
-    except IOError:
-        print '\n\nCound not load mean file:', args.mean
-        print 'To fetch a default model and mean file, use:\n'
-        print '  $ cd models/caffenet-yos/'
-        print '  $ ./fetch.sh\n\n'
-        print 'Or to use your own mean, change caffevis_data_mean in settings.py or override by running with `--mean MEAN_FILE`.\n'
-        raise
-    # Crop center region (e.g. 227x227) if mean is larger (e.g. 256x256)
-    excess_h = data_mean.shape[1] - data_size[0]
-    excess_w = data_mean.shape[2] - data_size[1]
-    assert excess_h >= 0 and excess_w >= 0, 'mean should be at least as large as %s' % repr(data_size)
-    data_mean = data_mean[:, (excess_h/2):(excess_h/2+data_size[0]), (excess_w/2):(excess_w/2+data_size[1])]
-    
+    data_mean = eval(args.mean)
+
+    if isinstance(data_mean, basestring):
+        # If the mean is given as a filename, load the file
+        try:
+            data_mean = np.load(data_mean)
+        except IOError:
+            print '\n\nCound not load mean file:', data_mean
+            print 'To fetch a default model and mean file, use:\n'
+            print '  $ cd models/caffenet-yos/'
+            print '  $ cp ./fetch.sh\n\n'
+            print 'Or to use your own mean, change caffevis_data_mean in settings_local.py or override by running with `--mean MEAN_FILE` (see --help).\n'
+            raise
+        # Crop center region (e.g. 227x227) if mean is larger (e.g. 256x256)
+        excess_h = data_mean.shape[1] - data_size[0]
+        excess_w = data_mean.shape[2] - data_size[1]
+        assert excess_h >= 0 and excess_w >= 0, 'mean should be at least as large as %s' % repr(data_size)
+        data_mean = data_mean[:, (excess_h/2):(excess_h/2+data_size[0]), (excess_w/2):(excess_w/2+data_size[1])]
+    elif data_mean is None:
+        pass
+    else:
+        # The mean has been given as a value or a tuple of values
+        data_mean = np.array(data_mean)
+        # Promote to shape C,1,1
+        while len(data_mean.shape) < 3:
+            data_mean = np.expand_dims(data_mean, -1)
+
+    print 'Using mean:', repr(data_mean)
+            
     # Load network
     sys.path.insert(0, os.path.join(args.caffe_root, 'python'))
     import caffe

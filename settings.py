@@ -93,10 +93,11 @@ if global_scale != 1.0:
     window_panes = scaled_window_panes
 
 # All window configuation information is now contained in the
-# window_panes variable
-print 'Final window panes and locations/sizes (i, j, i_size, j_size):'
-for pane in window_panes:
-    print '  Pane: %s' % repr(pane)
+# window_panes variable. Print if desired:
+if debug_window_panes:
+    print 'Final window panes and locations/sizes (i, j, i_size, j_size):'
+    for pane in window_panes:
+        print '  Pane: %s' % repr(pane)
 
 help_pane_loc = locals().get('help_pane_loc', (.07, .07, .86, .86))    # as a fraction of main window
 window_background = locals().get('window_background', (.2, .2, .2))
