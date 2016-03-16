@@ -34,6 +34,7 @@ Starting from your Caffe directory (that is, the directory where you've checked 
     $ git remote add yosinski https://github.com/yosinski/caffe.git
     $ git fetch --all
     $ git checkout --track -b deconv-deep-vis-toolbox yosinski/deconv-deep-vis-toolbox
+    $ < edit Makefile.config to suit your system if not already done in Step 0 >
     $ make clean
     $ make -j
     $ make -j pycaffe
@@ -44,12 +45,11 @@ As noted above, feel free to compile in `CPU_ONLY` mode.
 
 ### Step 2: Install prerequisites
 
-The only prerequisites beyond those required for Caffe are `python-opencv` and `scipy`, which may be installed as follows (other install options exist as well):
+The only prerequisites beyond those required for Caffe are `python-opencv`, `scipy`, and `scikit-image`, which may be installed as follows (other install options exist as well):
 
 #### Ubuntu:
 
-    $ sudo apt-get install python-opencv
-    $ sudo apt-get install scipy
+    $ sudo apt-get install python-opencv scipy python-skimage
 
 #### Mac using [homebrew](http://brew.sh/):
 
@@ -67,7 +67,11 @@ Install `scipy` either with OpenBLAS...
 
     $ brew install scipy
 
-You may have already installed the `python-opencv` bindings as part of the Caffe setup process. If `import cv2` works from Python, then you're all set. Similarly for `import scipy`.
+And install `scikit-image` using pip:
+
+    $ pip install scikit-image
+
+You may have already installed the `python-opencv` bindings as part of the Caffe setup process. If `import cv2` works from Python, then you're all set. Similarly for `import scipy` and `import skimage`.
 
 
 
