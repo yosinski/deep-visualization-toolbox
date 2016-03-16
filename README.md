@@ -31,16 +31,16 @@ You can visualize your own model as well. However, note that the toolbox provide
 
 1. **Forward/backward prop**: Images can be run forward through the network to visualize activations, and derivatives of any unit with respect to any other unit can be computed using backprop. In addition to traditional backprop, deconv from [Zeiler and Fergus (2014)](https://scholar.google.com/scholar?q=Zeiler+Visualizing+and+understanding+convolutional+networks) is supported as a way of flowing information backwards through the network. Doing forward and backward passes works for any model that can be run in Caffe (including yours!).
 
-2. **Per-unit visualizations**: Three types of per-unit visualizations can be computed for a network &mdash; max image, deconv of max image, activation maximization via regularized optimization &mdash; but these visualizations must be computed *outside* the toolbox and saved to jpg. The toolbox can then load these jpgs to display alongside units as the units are selected. The visualizations must be pre-computed because they are far too expensive to run live. For example, going through the training set to find the images causing max activation took 40 hours on our system (for all units). Out of the box, saved per-unit visualizations are provided for the caffenet-yos model, but not for the bvlc-googlenet or squeezenet models (and not for yours, but you can compute them yourself).
+2. **Per-unit visualizations**: Three types of per-unit visualizations can be computed for a network &mdash; max image, deconv of max image, activation maximization via regularized optimization &mdash; but these visualizations must be computed *outside* the toolbox and saved as jpg. The toolbox then loads these jpgs to display alongside units as they are selected. Visualizations must be pre-computed because they are far too expensive to run live. For example, going through the 1.3m image training set to find the images causing top-9 activations took 40 hours on our system (for all units). Per-unit visualization jpgs are provided for the caffenet-yos model, but not for the bvlc-googlenet or squeezenet models (and not for yours, but you can compute them yourself; see [computing per unit visualizations](doc/computing_per_unit_visualizations.md)).
 
 Summary:
 
 | Model          | Forward/Backward prop | Per-unit visualizations |
 | -------------  | ---------------- | ----------------------- |
 | [caffenet-yos](models/caffenet-yos) | **easy**             | **included**            |
-| [bvlc-googlenet](bvlc-googlenet)    | **easy**             | not-included, generate yourself if desired            |
-| [squeezenet](models/squeezenet)     | **easy**             | not-included, generate yourself if desired            |
-| other networks | **easy** (just point to your model in `settings_local.py`)  | not-included, generate yourself if desired  |
+| [bvlc-googlenet](bvlc-googlenet)    | **easy**             | not-included, [generate](doc/computing_per_unit_visualizations.md) if desired            |
+| [squeezenet](models/squeezenet)     | **easy**             | not-included, [generate](doc/computing_per_unit_visualizations.md) if desired            |
+| other networks | **easy** (just point to your model in `settings_local.py`)  | not-included, [generate](doc/computing_per_unit_visualizations.md) if desired  |
 
 
 
