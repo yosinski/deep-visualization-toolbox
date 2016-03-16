@@ -19,7 +19,7 @@ If you find this paper or code useful, we encourage you to cite the paper. BibTe
 
 When running, the toolbox looks like this (here showing a convolutional unit that responds to automobile wheels):
 
-![DeepVis Toolbox Screenshot bus](doc/example_caffenet-yos_bus_wheel_unit.jpg)
+![DeepVis Toolbox Screenshot bus](doc/example_caffenet-yos_bus_wheel_unit.jpg?raw=true)
 
 For a quick tour of the toolbox features, including what each pane of the interface is showing, watch this [4 min YouTube video](https://www.youtube.com/watch?v=AgkfIQ4IGaM). In addition to processing images files from disk, the toolbox can run off a webcam for live network visualization:
 
