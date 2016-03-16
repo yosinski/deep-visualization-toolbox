@@ -13,15 +13,47 @@ If you find this paper or code useful, we encourage you to cite the paper. BibTe
     Title = {Understanding Neural Networks Through Deep Visualization},
     Year = {2015}}
 
-## Setting up and running the toolbox
+
+
+# Features
+
+When running, the toolbox looks like this (here showing a convolutional unit that responds to automobile wheels):
+
+![DeepVis Toolbox Screenshot bus](doc/example_caffenet-yos_bus_wheel_unit.jpg)
+
+For a quick tour of the toolbox features, including what each pane of the interface is showing, watch this [4 min YouTube video](https://www.youtube.com/watch?v=AgkfIQ4IGaM). In addition to processing images files from disk, the toolbox can run off a webcam for live network visualization:
+
+[![DeepVis Toolbox Screenshot webcam](doc/example_caffenet-yos_webcam.300.jpg)](doc/example_caffenet-yos_webcam.jpg)
+
+The tool comes bundled with the [default caffenet-yos](models/caffenet-yos) model weights and precomputed per-unit visualizations shown in the paper. Weights for [bvlc-googlenet](models/bvlc-googlenet) and [squeezenet](models/squeezenet) can be downloaded by scripts in their respective directories; for example, here's bvlc-googlnet running in the toolbox:
+
+[![DeepVis Toolbox Screenshot bvlc-googlenet](doc/example_bvlc-googlenet_bus.300.jpg)](doc/example_bvlc-googlenet_bus.jpg)
+
+You can visualize your own model as well. Note that the toolbox brings together two rather separate sets of features:
+
+1. **Forward/backward prop**: Images can be run forward through the network to visualize activations, derivatives of any unit with respect to any other unit or the input pixels can be computed using backprop. In addition to traditional backprop, deconv from [Zeiler and Fergus (2014)](https://scholar.google.com/scholar?q=Zeiler+Visualizing+and+understanding+convolutional+networks) is supported as a way of flowing information backwards through the network. Doing forward and backward passes works for any model that can be run in Caffe (including yours!).
+
+2. **Per-unit visualizations**: Three types of per-unit visualizations can be computed -- max image, deconv of max image, activation maximization via regularized optimization -- but these visualizations must be computed *outside* the toolbox and saved to jpg. The toolbox can then load these jpgs (or others) to display alongside units as the units are selected. The visualizations must be pre-computed because they are far too expensive to run live. For example, going through the training set to find the images causing max activation took 42 hours on our system (for all units). Out of the box, saved per-unit visualizations are provided for the caffenet-yos model, but not for the bvlc-googlenet or squeezenet models (and not for yours). 
+
+Summary:
+
+| Model          | Forward/Backward prop | Per-unit visualizations |
+| -------------  | ---------------- | ----------------------- |
+| caffenet-yos   | **easy**             | **included**            |
+| bvlc-googlenet | **easy**             | not-included            |
+| squeezenet     | **easy**             | not-included            |
+| other networks | **easy** (just point to your model in settings_local.py)  | not-included (but you can generate them yourself) |
+
+
+
+# Setting up and running the toolbox
 
 ### Step 0: Compile master branch of caffe (optional but recommended)
 
 Checkout the master branch of [Caffe](http://caffe.berkeleyvision.org/) and compile it on your
 machine. If you've never used Caffe before, it can take a bit of time to get all the required libraries in place. Fortunately, the [installation process is well documented](http://caffe.berkeleyvision.org/installation.html). When you're installing the OpenCV dependency, install the Python bindings as well (see Step 2 below).
 
-Note: When compiling Caffe, you can set `CPU_ONLY := 1` in your `Makefile.config` to skip all the Cuda/GPU stuff. The Deep Visualization Toolbox can run with Caffe in either CPU or GPU mode, and it's simpler to get Caffe to compile for the first time in `CPU_ONLY` mode.
-
+Note: When compiling Caffe, you can set `CPU_ONLY := 1` in your `Makefile.config` to skip all the Cuda/GPU stuff. The Deep Visualization Toolbox can run with Caffe in either CPU or GPU mode, and it's simpler to get Caffe to compile for the first time in `CPU_ONLY` mode. If Caffe is compiled with GPU options enabled, CPU vs. GPU may be switched at runtime via a setting in `settings_local.py`. Also, cuDNN may be enabled or disabled by recompiling Caffe with or without cuDNN.
 
 
 ### Step 1: Compile the deconv-deep-vis-toolbox branch of caffe
