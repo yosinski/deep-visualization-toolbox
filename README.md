@@ -21,16 +21,13 @@ The main toolbox window looks like this, here showing a convolutional unit that 
 
 ![DeepVis Toolbox Screenshot bus](doc/example_caffenet-yos_bus_wheel_unit.jpg?raw=true)
 
-For a quick tour of the toolbox features, including what each pane of the interface is showing, watch this [4 min YouTube video](https://www.youtube.com/watch?v=AgkfIQ4IGaM). In addition to processing images files from disk, the toolbox can run off a webcam for live network visualization:
+For a quick tour of the toolbox features, including what each pane of the above interface is showing, watch this [4 min YouTube video](https://www.youtube.com/watch?v=AgkfIQ4IGaM). In addition to processing images files from disk, the toolbox can run off a webcam for live network visualization **(below left)**.
+The toolbox comes bundled with the default [caffenet-yos](models/caffenet-yos) model weights and pre-computed per-unit visualizations shown in the paper. Weights, but not per-unit visualizations, for [bvlc-googlenet](models/bvlc-googlenet) **(below right)** and [squeezenet](models/squeezenet) can be downloaded by scripts in their respective directories.
 
-[![DeepVis Toolbox Screenshot webcam](doc/example_caffenet-yos_webcam.300.jpg)](doc/example_caffenet-yos_webcam.jpg)
+[![DeepVis Toolbox Screenshot webcam](doc/example_caffenet-yos_webcam.300.jpg)](doc/example_caffenet-yos_webcam.jpg?raw=true)
+[![DeepVis Toolbox Screenshot bvlc-googlenet](doc/example_bvlc-googlenet_bus.300.jpg)](doc/example_bvlc-googlenet_bus.jpg?raw=true)
 
-The toolbox comes bundled with the default [caffenet-yos](models/caffenet-yos) model weights and pre-computed per-unit visualizations shown in the paper. Weights, but not per-unit visualizations, for [bvlc-googlenet](models/bvlc-googlenet) and [squeezenet](models/squeezenet) can be downloaded by scripts in their respective directories; for example, here's bvlc-googlnet running in the toolbox:
-
-[![DeepVis Toolbox Screenshot bvlc-googlenet](doc/example_bvlc-googlenet_bus.300.jpg)](doc/example_bvlc-googlenet_bus.jpg)
-
-You can visualize your own model as well. However, note that the toolbox provides the below set of two rather separate sets of features, and while the first is
-easy to use with your own model, the second is slightly more involved:
+You can visualize your own model as well, but first let's look at which part is easy and which is hard. The toolbox provides the below set of two rather separate sets of features; the first is easy to use with your own model, and the second is more involved:
 
 1. **Forward/backward prop**: Images can be run forward through the network to visualize activations, and derivatives of any unit with respect to any other unit can be computed using backprop. In addition to traditional backprop, deconv from [Zeiler and Fergus (2014)](https://scholar.google.com/scholar?q=Zeiler+Visualizing+and+understanding+convolutional+networks) is supported as a way of flowing information backwards through the network. Doing forward and backward passes works for any model that can be run in Caffe (including yours!).
 
