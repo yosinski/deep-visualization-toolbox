@@ -16,6 +16,8 @@ class CaffeProcThread(CodependentThread):
         self.net = net
         self.input_dims = self.net.blobs['data'].data.shape[2:4]    # e.g. (227,227)
         self.state = state
+        self.last_process_finished_at = None
+        self.last_process_elapsed = None
         self.frames_processed_fwd = 0
         self.frames_processed_back = 0
         self.loop_sleep = loop_sleep
@@ -111,8 +113,23 @@ class CaffeProcThread(CodependentThread):
                 with self.state.lock:
                     self.state.caffe_net_state = 'free'
                     self.state.drawing_stale = True
+                now = time.time()
+                if self.last_process_finished_at:
+                    self.last_process_elapsed = now - self.last_process_finished_at
+                self.last_process_finished_at = now
             else:
                 time.sleep(self.loop_sleep)
         
         print 'CaffeProcThread.run: finished'
         print 'CaffeProcThread.run: processed %d frames fwd, %d frames back' % (self.frames_processed_fwd, self.frames_processed_back)
+
+    def approx_fps(self):
+        '''Get the approximate frames per second processed by this
+        thread, considering only the last image processed. If more
+        than two seconds ago, assume pipeline has stalled elsewhere
+        (perhaps using static images that are only processed once).
+        '''
+        if self.last_process_elapsed and (time.time() - self.last_process_finished_at) < 2.0:
+            return 1.0 / (self.last_process_elapsed + 1e-6)
+        else:
+            return 0.0

@@ -296,6 +296,7 @@ class CaffeVisApp(BaseApp):
         loc = self.settings.caffevis_status_loc[::-1]   # Reverse to OpenCV c,r order
 
         status = StringIO.StringIO()
+        fps = self.proc_thread.approx_fps()
         with self.state.lock:
             print >>status, 'pattern' if self.state.pattern_mode else ('back' if self.state.layers_show_back else 'fwd'),
             print >>status, '%s:%d |' % (self.state.layer, self.state.selected_unit),
@@ -308,6 +309,9 @@ class CaffeVisApp(BaseApp):
                                                            self.state.back_filt_mode),
             print >>status, '|',
             print >>status, 'Boost: %g/%g' % (self.state.layer_boost_indiv, self.state.layer_boost_gamma)
+
+            if fps > 0:
+                print >>status, '| FPS: %.01f' % fps
 
             if self.state.extra_msg:
                 print >>status, '|', self.state.extra_msg
