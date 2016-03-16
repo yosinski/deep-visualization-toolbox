@@ -27,7 +27,7 @@ The toolbox comes bundled with the default [caffenet-yos](models/caffenet-yos) m
 [![DeepVis Toolbox Screenshot webcam](doc/example_caffenet-yos_webcam.300.jpg)](doc/example_caffenet-yos_webcam.jpg?raw=true)
 [![DeepVis Toolbox Screenshot bvlc-googlenet](doc/example_bvlc-googlenet_bus.300.jpg)](doc/example_bvlc-googlenet_bus.jpg?raw=true)
 
-You can visualize your own model as well. Sort of. I turns out one part is easy, and one is more difficult. The toolbox provides two rather separate sets of features; the first is easy to use with your own model, and the second is more involved:
+You can visualize your own model as well. However, note that the toolbox provides two rather separate sets of features; the first is easy to use with your own model, and the second is more involved:
 
 1. **Forward/backward prop**: Images can be run forward through the network to visualize activations, and derivatives of any unit with respect to any other unit can be computed using backprop. In addition to traditional backprop, deconv from [Zeiler and Fergus (2014)](https://scholar.google.com/scholar?q=Zeiler+Visualizing+and+understanding+convolutional+networks) is supported as a way of flowing information backwards through the network. Doing forward and backward passes works for any model that can be run in Caffe (including yours!).
 
