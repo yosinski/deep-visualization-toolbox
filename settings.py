@@ -319,4 +319,4 @@ assert_in_settings('caffevis_data_mean')
 
 # Check that caffe directory actually exists
 if not os.path.exists(caffevis_caffe_root):
-    raise Exception('ERROR: The given Caffe directory, %s, does not exist. Set caffevis_caffe_root in your settings_local.py to the path of your compiled Caffe checkout.' % caffevis_caffe_root)
+    raise Exception('The Caffe directory specified in settings_local.py, %s, does not exist. Set the caffevis_caffe_root variable in your settings_local.py to the path of your compiled Caffe checkout.' % caffevis_caffe_root)
