@@ -124,4 +124,7 @@ _.add('toggle_label_predictions', '8',
 _.add('toggle_unit_jpgs', '9',
        'Turn on or off display of loaded jpg visualization')
 
+_.add('upconv_mode', 'y',
+       '(expert) Toggle upconv mode.')
+
 bindings = _

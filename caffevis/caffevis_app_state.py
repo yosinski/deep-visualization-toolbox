@@ -44,6 +44,7 @@ class CaffeVisAppState(object):
         self.backprop_unit = self.selected_unit
         self.backprop_selection_frozen = False    # If false, backprop unit tracks selected unit
         self.back_enabled = False
+        self.upconv_enabled = True
         self.back_mode = 'grad'      # 'grad' or 'deconv'
         self.back_filt_mode = 'raw'  # 'raw', 'gray', 'norm', 'normblur'
         self.pattern_mode = False    # Whether or not to show desired patterns instead of activations in layers pane
@@ -129,6 +130,10 @@ class CaffeVisAppState(object):
                         self.back_stale = True
                     else:
                         self.back_enabled = False
+            elif tag == 'upconv_mode':
+                self.upconv_enabled = not self.upconv_enabled
+                if self.upconv_enabled:
+                    self.back_enabled = False
             elif tag == 'back_filt_mode':
                     if self.back_filt_mode == 'raw':
                         self.back_filt_mode = 'gray'

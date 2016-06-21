@@ -7,6 +7,7 @@ import cv2
 import numpy as np
 import time
 import StringIO
+import ipdb as pdb
 
 from misc import WithTimer
 from numpy_cache import FIFOLimitedArrayCache
@@ -52,6 +53,7 @@ class CaffeVisApp(BaseApp):
             channel_swap = self._net_channel_swap,
             raw_scale = self._range_scale,
         )
+        self.upconv_net = caffe.Net(settings.caffevis_upconv_deploy_prototxt, settings.caffevis_upconv_network_weights, caffe.TEST)
 
         if isinstance(settings.caffevis_data_mean, basestring):
             # If the mean is given as a filename, load the file
@@ -126,7 +128,7 @@ class CaffeVisApp(BaseApp):
 
         if self.proc_thread is None or not self.proc_thread.is_alive():
             # Start thread if it's not already running
-            self.proc_thread = CaffeProcThread(self.net, self.state,
+            self.proc_thread = CaffeProcThread(self.net, self.upconv_net, self.state,
                                                self.settings.caffevis_frame_wait_sleep,
                                                self.settings.caffevis_pause_after_keys,
                                                self.settings.caffevis_heartbeat_required,
@@ -215,6 +217,8 @@ class CaffeVisApp(BaseApp):
                     self._draw_back_pane(panes['caffevis_layers'])
             if 'caffevis_jpgvis' in panes:
                 self._draw_jpgvis_pane(panes['caffevis_jpgvis'])
+            if 'caffevis_upconv' in panes:
+                self._draw_upconv_pane(panes['caffevis_upconv'])
 
             with self.state.lock:
                 self.state.drawing_stale = False
@@ -566,6 +570,27 @@ class CaffeVisApp(BaseApp):
             # Will never be available
             pane.data[:] = to_255(self.settings.window_background)
 
+    def _draw_upconv_pane(self, pane):
+        print '**********', self.state.upconv_enabled, 'None' if self.proc_thread.im_upconv_blob is None else 'im %f,%f' % (self.proc_thread.im_upconv_blob.min(), self.proc_thread.im_upconv_blob.max())
+        upconv_enabled = self.state.upconv_enabled and self.proc_thread.im_upconv_blob is not None
+        if not upconv_enabled:
+            pane.data[:] = to_255(self.settings.stale_background)
+            return
+
+        #im_upconv = self.net.deprocess('data', self.im_upconv_blob)
+        tmp = self.proc_thread.im_upconv_blob[0]                    # bc01 -> c01
+        tmp = tmp.transpose((1,2,0))    # c01 -> 01c
+        im_upconv = tmp[:, :, self._net_channel_swap_inv]  # e.g. BGR -> RGB
+        im_upconv_crop = im_upconv[self.proc_thread.topleft[0]:self.proc_thread.topleft[0]+self.proc_thread.input_dims[0],
+                                   self.proc_thread.topleft[1]:self.proc_thread.topleft[1]+self.proc_thread.input_dims[1]]
+
+        # Rescale to [0,1] range
+        im_upconv_01 = norm01(im_upconv)
+        upconv_img_resize = ensure_uint255_and_resize_to_fit(norm01(im_upconv_01), pane.data.shape)
+        pane.data[0:upconv_img_resize.shape[0], 0:upconv_img_resize.shape[1], :] = upconv_img_resize
+
+        #pdb.set_trace()
+        
     def handle_key(self, key, panes):
         return self.state.handle_key(key)
 
