@@ -571,7 +571,7 @@ class CaffeVisApp(BaseApp):
             pane.data[:] = to_255(self.settings.window_background)
 
     def _draw_upconv_pane(self, pane):
-        print '**********', self.state.upconv_enabled, 'None' if self.proc_thread.im_upconv_blob is None else 'im %f,%f' % (self.proc_thread.im_upconv_blob.min(), self.proc_thread.im_upconv_blob.max())
+        #print '**********', self.state.upconv_enabled, 'None' if self.proc_thread.im_upconv_blob is None else 'im %f,%f' % (self.proc_thread.im_upconv_blob.min(), self.proc_thread.im_upconv_blob.max())
         upconv_enabled = self.state.upconv_enabled and self.proc_thread.im_upconv_blob is not None
         if not upconv_enabled:
             pane.data[:] = to_255(self.settings.stale_background)

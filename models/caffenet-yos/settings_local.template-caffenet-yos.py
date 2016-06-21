@@ -10,7 +10,7 @@ caffevis_caffe_root      = '/path/to/caffe'
 
 # Load model: caffenet-yos
 # Path to caffe deploy prototxt file. Minibatch size should be 1.
-caffevis_deploy_prototxt = '%DVT_ROOT%/models/caffenet-yos/caffenet-yos-deploy.prototxt'
+caffevis_deploy_prototxt = '%DVT_ROOT%/models/caffenet-yos/caffenet-yos-deploy-nonreused.prototxt'
 
 # Path to network weights to load.
 caffevis_network_weights = '%DVT_ROOT%/models/caffenet-yos/caffenet-yos-weights'
@@ -24,7 +24,7 @@ caffevis_unit_jpg_dir    = '%DVT_ROOT%/models/caffenet-yos/unit_jpg_vis'
 caffevis_jpgvis_layers   = ['conv1', 'conv2', 'conv3', 'conv4', 'conv5', 'fc6', 'fc7', 'fc8', 'prob']
 caffevis_jpgvis_remap    = {'pool1': 'conv1', 'pool2': 'conv2', 'pool5': 'conv5'}
 def caffevis_layer_pretty_name_fn(name):
-    return name.replace('pool','p').replace('norm','n')
+    return name.replace('pool','p').replace('norm','n').replace('relu','r')
 
 # Use GPU? Default is True.
 #caffevis_mode_gpu = True

@@ -18,6 +18,7 @@ class CaffeProcThread(CodependentThread):
         self.net = net
         self.upconv_net = upconv_net
         self.upconv_code = None
+        self.upconv_code_shape = None
         self.input_dims = self.net.blobs['data'].data.shape[2:4]    # e.g. (227,227)
         self.state = state
         self.last_process_finished_at = None
@@ -119,7 +120,7 @@ class CaffeProcThread(CodependentThread):
                 # Grab layer code for upconv mode
                 self.image_layer_code = self.net.blobs[layer].data.copy()
                 self.image_layer_code_idx = layer_idx
-                print 'GRABBED LAYER CODE OF SHAPE', self.image_layer_code.shape, 'with min,max = %f,%f' % (self.image_layer_code.min(), self.image_layer_code.max())
+                #print 'GRABBED LAYER CODE OF SHAPE', self.image_layer_code.shape, 'with min,max = %f,%f' % (self.image_layer_code.min(), self.image_layer_code.max())
 
             if run_back:
                 diffs = self.net.blobs[backprop_layer].diff * 0
@@ -150,18 +151,19 @@ class CaffeProcThread(CodependentThread):
                 # Much copied from https://github.com/Evolving-AI-Lab/synthesizing/blob/master/act_max.py
 
                 if self.upconv_code is None:
-                    self.upconv_code = np.random.normal(0, .1, self.upconv_net.blobs[self.upconv_in_layer].data.shape)
+                    self.upconv_code_shape = self.upconv_net.blobs[self.upconv_in_layer].data.shape
+                    self.upconv_code = np.random.normal(0, .1, self.upconv_code_shape)
                     print 'Initial code with shape', self.upconv_code.shape
 
                 self.upconv_net.forward(feat=self.upconv_code)
                 self.im_upconv_blob = self.upconv_net.blobs[self.upconv_out_layer].data
 
-                print 'self.im_upconv_blob shape is', self.im_upconv_blob.shape
+                #print 'self.im_upconv_blob shape is', self.im_upconv_blob.shape
 
                 # Crop from 256x256 to 227x227
-                print '   REMOVE COPY HERE'
+                ##print '   REMOVE COPY HERE'
                 self.im_upconv_crop_blob = self.im_upconv_blob.copy()[:,:,self.topleft[0]:self.topleft[0]+self.input_dims[0], self.topleft[1]:self.topleft[1]+self.input_dims[1]]
-                print 'self.im_upconv_crop_blob shape is', self.im_upconv_crop_blob.shape
+                #print 'self.im_upconv_crop_blob shape is', self.im_upconv_crop_blob.shape
                 
                 # 2. forward pass the image self.im_upconv_crop_blob to net to maximize an unit k
                 # 3. backprop the gradient from net to the image to get an updated image x
@@ -171,15 +173,18 @@ class CaffeProcThread(CodependentThread):
                     #net_preproc_forward(self.net, self.im_upconv_crop_blob, self.input_dims)
 
                 n_elem = np.prod(self.image_layer_code.shape)
+                normalize_by = n_elem
+                #normalize_by = np.sqrt(n_elem)
+
                 # 4. Compute diffs for cost C = .5 * ()^2 w.r.t. upconv code
-                # C = .5 * (((self.net.blobs[layer].data - self.image_layer_code)/n_elem)**2).sum()
+                # C = .5 * (((self.net.blobs[layer].data - self.image_layer_code)/normalize_by)**2).sum()
                 try:
-                    cost = .5 * (((self.net.blobs[layer].data - self.image_layer_code) / n_elem)**2).sum()
+                    cost = .5 * (((self.net.blobs[layer].data - self.image_layer_code) / normalize_by)**2).sum()
                 except:
                     print 'ERROR'
                     pdb.set_trace()
-                print 'upconv code match cost is', cost
-                diffs = (self.net.blobs[layer].data - self.image_layer_code) / n_elem**2
+                #print 'upconv code match cost is', cost
+                diffs = (self.net.blobs[layer].data - self.image_layer_code) / normalize_by**2
 
                 with WithTimer('CaffeProcThread:backward upconv im', quiet = self.debug_level < 1):
                     #print '**** Doing backprop with %s diffs in [%s,%s]' % (backprop_layer, diffs.min(), diffs.max())
@@ -192,25 +197,31 @@ class CaffeProcThread(CodependentThread):
                 #grad_blob = grad_blob[0]                    # bc01 -> c01
                 #grad_blob = grad_blob.transpose((1,2,0))    # c01 -> 01c
                 #grad_img = grad_blob[:, :, self._net_channel_swap_inv]  # e.g. BGR -> RGB
-                print 'CHECK ON RGB / BRG order'
+                #print 'CHECK ON RGB / BRG order'
 
                 # Push back through upconv net to get grad dC / dcode
                 self.upconv_image_grad_blob[:,:,self.topleft[0]:self.topleft[0]+self.input_dims[0], self.topleft[1]:self.topleft[1]+self.input_dims[1]] = grad_blob
                 self.upconv_net.backward_from_layer(self.upconv_out_layer, self.upconv_image_grad_blob)
                 grad_code = self.upconv_net.blobs[self.upconv_in_layer].diff
 
-                print 'got grad_code with min,max = %f,%f' % (grad_code.min(), grad_code.max())
+                #print 'got grad_code with min,max = %f,%f' % (grad_code.min(), grad_code.max())
 
-
-                desired_prog = .01
+                desired_prog = cost / 10
                 max_lr = 1e3
                 upconv_prog_lr = desired_prog / np.linalg.norm(grad_code)**2
                 upconv_lr = min(max_lr, upconv_prog_lr)
+                #upconv_lr = .01
+                noise_lr = .01
+                noise_lr = 0
                 print 'upconv_lr =', upconv_lr
                 
-                self.upconv_code -= upconv_lr * grad_code
+                self.upconv_code += -upconv_lr * grad_code + noise_lr * np.random.normal(0, 1, self.upconv_code_shape)
 
-                print 'self.upconv_code min,max = %f,%f' % (self.upconv_code.min(), self.upconv_code.max())
+                print ('Im code %g,%g,%g    upconv code %g,%g,%g,   cost %g,  lr %g' %
+                       (self.image_layer_code.min(), self.image_layer_code.mean(), self.image_layer_code.max(),
+                        self.upconv_code.min(), self.upconv_code.mean(), self.upconv_code.max(),
+                        cost, upconv_lr)) 
+                #print 'self.upconv_code min,max = %f,%f' % (self.upconv_code.min(), self.upconv_code.max())
                 ## OLD
                 ## 4. Place the changes in x (227x227) back to self.im_upconv_crop_blob (256x256)
                 #updated_self.im_upconv_crop_blob = self.im_upconv_crop_blob.copy()
@@ -227,7 +238,7 @@ class CaffeProcThread(CodependentThread):
                 with self.state.lock:
                     self.state.caffe_net_state = 'free'
                     self.state.drawing_stale = True
-                    print '============ marking as stale (and sleeping)'
+                    #print '============ marking as stale (and sleeping)'
                 now = time.time()
                 if self.last_process_finished_at:
                     self.last_process_elapsed = now - self.last_process_finished_at
