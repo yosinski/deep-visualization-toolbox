@@ -126,5 +126,7 @@ _.add('toggle_unit_jpgs', '9',
 
 _.add('upconv_mode', 'y',
        '(expert) Toggle upconv mode.')
+_.add('upconv_kick', 'p',
+       '(expert) Kick upconv mode.')
 
 bindings = _

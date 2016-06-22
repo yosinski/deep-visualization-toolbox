@@ -15,9 +15,14 @@ sys.dont_write_bytecode = False
 ######## Extra settings for upconv
 # Path to caffe deploy prototxt file. Minibatch size should be 1.
 caffevis_upconv_deploy_prototxt = '/home/jason/s_local/synthesizing/nets/upconv/fc6/generator.prototxt'
+#caffevis_upconv_deploy_prototxt = '/home/jason/s_local/synthesizing/nets/upconv/conv2/decoder.prototxt'
 
 # Path to network weights to load.
 caffevis_upconv_network_weights = '/home/jason/s_local/synthesizing/nets/upconv/fc6/generator.caffemodel'
+#caffevis_upconv_network_weights = '/home/jason/s_local/synthesizing/nets/upconv/conv2/generator.caffemodel'
+
+# Path to range clip.
+caffevis_upconv_code_clip = '/home/jason/s_local/synthesizing/act_range/3x/fc6.npy'
 ######## Extra settings for upconv
 
 

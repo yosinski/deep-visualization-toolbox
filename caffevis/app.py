@@ -54,6 +54,8 @@ class CaffeVisApp(BaseApp):
             raw_scale = self._range_scale,
         )
         self.upconv_net = caffe.Net(settings.caffevis_upconv_deploy_prototxt, settings.caffevis_upconv_network_weights, caffe.TEST)
+        self.upconv_percentile_low = None
+        self.upconv_percentile_high = None
 
         if isinstance(settings.caffevis_data_mean, basestring):
             # If the mean is given as a filename, load the file
@@ -129,6 +131,7 @@ class CaffeVisApp(BaseApp):
         if self.proc_thread is None or not self.proc_thread.is_alive():
             # Start thread if it's not already running
             self.proc_thread = CaffeProcThread(self.net, self.upconv_net, self.state,
+                                               self.settings,
                                                self.settings.caffevis_frame_wait_sleep,
                                                self.settings.caffevis_pause_after_keys,
                                                self.settings.caffevis_heartbeat_required,
@@ -585,7 +588,19 @@ class CaffeVisApp(BaseApp):
                                    self.proc_thread.topleft[1]:self.proc_thread.topleft[1]+self.proc_thread.input_dims[1]]
 
         # Rescale to [0,1] range
-        im_upconv_01 = norm01(im_upconv)
+        percentiles = np.percentile(im_upconv.flatten(), (2, 98))
+        if self.upconv_percentile_low is None:
+            self.upconv_percentile_low  = percentiles[0]
+            self.upconv_percentile_high = percentiles[1]
+        else:
+            self.upconv_percentile_low  = .99 * self.upconv_percentile_low  + .01 * percentiles[0]
+            self.upconv_percentile_high = .99 * self.upconv_percentile_high + .01 * percentiles[1]
+        #pdb.set_trace()
+        im_upconv_01 = im_upconv.copy()
+        im_upconv_01 -= self.upconv_percentile_low
+        im_upconv_01 /= (self.upconv_percentile_high-self.upconv_percentile_low)
+        im_upconv_01 = np.maximum(np.minimum(im_upconv_01, 1), 0)
+        
         upconv_img_resize = ensure_uint255_and_resize_to_fit(norm01(im_upconv_01), pane.data.shape)
         pane.data[0:upconv_img_resize.shape[0], 0:upconv_img_resize.shape[1], :] = upconv_img_resize
 
