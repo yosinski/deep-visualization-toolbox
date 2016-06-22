@@ -187,20 +187,38 @@ class CaffeProcThread(CodependentThread):
                 # C = .5 * (((self.net.blobs[layer].data - self.image_code_target_layer)/normalize_by)**2).sum()
 
                 upconv_code_target_layer = self.net.blobs[layer].data
+
+
+                #####MASK
+                top_k = (-self.image_code_target_layer.flatten()).argsort()
+                mask = np.zeros_like(self.image_code_target_layer)
+                mask.ravel()[top_k[0:1]] = 1.0
+
+                code_diff = upconv_code_target_layer - self.image_code_target_layer
+                #SUPER HACK
+                code_diff -= 10
+                code_diff = -self.image_code_target_layer.copy()
+                #code_diff *= mask
                 try:
-                    cost = .5 * (((upconv_code_target_layer - self.image_code_target_layer) / normalize_by)**2).sum()
+                    cost = .5 * (((code_diff) / normalize_by)**2).sum()
                 except:
                     print 'ERROR'
                     pdb.set_trace()
                 #print 'upconv code match cost is', cost
-                #diffs = (upconv_code_target_layer - self.image_code_target_layer) / normalize_by**2
-                diffs = np.zeros((1,1000), 'float32')
-                diffs[0,933] = 1.0
-
+                diffs = (code_diff) / normalize_by**2
+                #diffs = np.zeros((1,1000), 'float32')
+                #diffs[0,717] = -1.0
+                #diffs[0,933] = -1.0
+                print diffs
+                print diffs.min(), diffs.max()
+                #print 'Truck image code is %g, upconv code is %g' % (self.image_code_target_layer[0,717], upconv_code_target_layer[0,717])
+                #pdb.set_trace()
+                
+                
                 with WithTimer('CaffeProcThread:backward upconv im', quiet = self.debug_level < 1):
                     #print '**** Doing backprop with %s diffs in [%s,%s]' % (backprop_layer, diffs.min(), diffs.max())
-                    #self.net.backward_from_layer(layer, diffs, zero_higher = True)
-                    self.net.backward_from_layer('fc8', diffs, zero_higher = True)
+                    self.net.backward_from_layer(layer, diffs, zero_higher = True)
+                    #self.net.backward_from_layer('fc8', diffs, zero_higher = True)
 
                 grad_blob = self.net.blobs['data'].diff
 
@@ -223,12 +241,12 @@ class CaffeProcThread(CodependentThread):
                 upconv_prog_lr = desired_prog / np.linalg.norm(grad_code)**2
                 upconv_lr = min(max_lr, upconv_prog_lr)
 
-
-
-                upconv_lr = -1.0
+                upconv_lr = .0001   # ok for conv5
+                upconv_lr = 2.0
                 noise_lr = .01
                 noise_lr = 0.0
-                code_decay = .99
+                #code_decay = .99
+                code_decay = 1.0
                 print 'upconv_lr =', upconv_lr
                 
                 self.upconv_code += -upconv_lr * grad_code + noise_lr * np.random.normal(0, 1, self.upconv_code_shape)
