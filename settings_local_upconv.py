@@ -35,7 +35,7 @@ window_panes = (
     ('caffevis_control', (  0,  300,   30,   900)),
     ('caffevis_layers',  ( 30,  300,  870,   900)),
     ('caffevis_jpgvis',  (  0, 1200,  900,   300)),
-    ('caffevis_upconv',  (  0, 1500,  300,   300)),
+    ('caffevis_upconv',  (  0, 1510,  600,   600)),
 )
 
 
@@ -52,6 +52,6 @@ caffevis_caffe_root      = '/home/jason/s_local/deep-visualization-toolbox/compi
 caffevis_mode_gpu = True
 # Display tweaks.
 # Scale all window panes in UI by this factor
-global_scale = .9
+global_scale = 1.1
 # Scale all fonts by this factor
 global_font_size = .9

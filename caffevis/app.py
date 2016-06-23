@@ -353,8 +353,10 @@ class CaffeVisApp(BaseApp):
 
             
             if self.settings.caffevis_jpgvis_layers and load_layer in self.settings.caffevis_jpgvis_layers:
+                #jpg_path = os.path.join(self.settings.caffevis_unit_jpg_dir,
+                #                        'regularized_opt', load_layer, 'whole_layer.jpg')
                 jpg_path = os.path.join(self.settings.caffevis_unit_jpg_dir,
-                                        'regularized_opt', load_layer, 'whole_layer.jpg')
+                                        'upconv', load_layer, 'whole_layer.jpg')
 
                 # Get highres version
                 #cache_before = str(self.img_cache)
@@ -588,7 +590,7 @@ class CaffeVisApp(BaseApp):
                                    self.proc_thread.topleft[1]:self.proc_thread.topleft[1]+self.proc_thread.input_dims[1]]
 
         # Rescale to [0,1] range
-        percentiles = np.percentile(im_upconv.flatten(), (2, 98))
+        percentiles = np.percentile(im_upconv_crop.flatten(), (2, 98))
         if self.upconv_percentile_low is None:
             self.upconv_percentile_low  = percentiles[0]
             self.upconv_percentile_high = percentiles[1]
@@ -596,12 +598,12 @@ class CaffeVisApp(BaseApp):
             self.upconv_percentile_low  = .99 * self.upconv_percentile_low  + .01 * percentiles[0]
             self.upconv_percentile_high = .99 * self.upconv_percentile_high + .01 * percentiles[1]
         #pdb.set_trace()
-        im_upconv_01 = im_upconv.copy()
-        im_upconv_01 -= self.upconv_percentile_low
-        im_upconv_01 /= (self.upconv_percentile_high-self.upconv_percentile_low)
-        im_upconv_01 = np.maximum(np.minimum(im_upconv_01, 1), 0)
+        im_upconv_crop_01 = im_upconv_crop.copy()
+        im_upconv_crop_01 -= self.upconv_percentile_low
+        im_upconv_crop_01 /= (self.upconv_percentile_high-self.upconv_percentile_low)
+        im_upconv_crop_01 = np.maximum(np.minimum(im_upconv_crop_01, 1), 0)
         
-        upconv_img_resize = ensure_uint255_and_resize_to_fit(norm01(im_upconv_01), pane.data.shape)
+        upconv_img_resize = ensure_uint255_and_resize_to_fit(norm01(im_upconv_crop_01), pane.data.shape)
         pane.data[0:upconv_img_resize.shape[0], 0:upconv_img_resize.shape[1], :] = upconv_img_resize
 
         #pdb.set_trace()

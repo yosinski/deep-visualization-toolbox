@@ -18,6 +18,7 @@ class CaffeProcThread(CodependentThread):
         self.net = net
         self.settings = settings
         self.upconv_net = upconv_net
+        self.image_input = None
         self.upconv_code = None
         self.upconv_code_shape = None
         self.upconv_code_clip = np.load(self.settings.caffevis_upconv_code_clip)
@@ -120,6 +121,7 @@ class CaffeProcThread(CodependentThread):
                 with WithTimer('CaffeProcThread:forward', quiet = self.debug_level < 1):
                     net_preproc_forward(self.net, im_small, self.input_dims)
                 # Grab layer code for upconv mode
+                self.image_input = self.net.blobs['data'].data.copy()
                 self.image_code_target_layer = self.net.blobs[layer].data.copy()
                 self.image_code_target_layer_idx = layer_idx
                 #print 'GRABBED LAYER CODE OF SHAPE', self.image_code_target_layer.shape, 'with min,max = %f,%f' % (self.image_code_target_layer.min(), self.image_code_target_layer.max())
@@ -190,15 +192,24 @@ class CaffeProcThread(CodependentThread):
 
 
                 #####MASK
-                top_k = (-self.image_code_target_layer.flatten()).argsort()
-                mask = np.zeros_like(self.image_code_target_layer)
-                mask.ravel()[top_k[0:1]] = 1.0
 
-                code_diff = upconv_code_target_layer - self.image_code_target_layer
+                #code_diff = upconv_code_target_layer - self.image_code_target_layer
                 #SUPER HACK
-                code_diff -= 10
+                #code_diff -= 10
                 code_diff = -self.image_code_target_layer.copy()
-                #code_diff *= mask
+                #code_diff += -code_diff.max() - 1
+                if self.state.cursor_area == 'top':
+                    top_k = (-self.image_code_target_layer.flatten()).argsort()
+                    mask = np.zeros_like(self.image_code_target_layer)
+                    mask.ravel()[top_k[0:10]] = 1.0
+                else:
+                    mask = np.zeros_like(code_diff)
+                    mask[0,self.state.selected_unit] = 1.0
+                    # hack to manually control fc layers
+                    if mask.sum() == 1:
+                        code_diff[0,self.state.selected_unit] = -1.0       # corner case: negative pre-softmax activations
+                code_diff *= mask
+
                 try:
                     cost = .5 * (((code_diff) / normalize_by)**2).sum()
                 except:
@@ -222,6 +233,10 @@ class CaffeProcThread(CodependentThread):
 
                 grad_blob = self.net.blobs['data'].diff
 
+                # ADD grad of image matching cost
+                #grad_blob += .000001 * (self.net.blobs['data'].data - self.image_input)
+                #grad_blob = .000001 * (self.net.blobs['data'].data - self.image_input)
+                
                 # Manually deprocess (skip mean subtraction and rescaling)
                 #grad_img = self.net.deprocess('data', diff_blob)
                 #grad_blob = grad_blob[0]                    # bc01 -> c01
@@ -233,7 +248,7 @@ class CaffeProcThread(CodependentThread):
                 self.upconv_image_grad_blob[:,:,self.topleft[0]:self.topleft[0]+self.input_dims[0], self.topleft[1]:self.topleft[1]+self.input_dims[1]] = grad_blob
                 self.upconv_net.backward_from_layer(self.upconv_out_layer, self.upconv_image_grad_blob)
                 grad_code = self.upconv_net.blobs[self.upconv_in_layer].diff
-
+                grad_code /= (np.linalg.norm(grad_code) + 1e-6)
                 #print 'got grad_code with min,max = %f,%f' % (grad_code.min(), grad_code.max())
 
                 desired_prog = cost / 20
@@ -241,12 +256,17 @@ class CaffeProcThread(CodependentThread):
                 upconv_prog_lr = desired_prog / np.linalg.norm(grad_code)**2
                 upconv_lr = min(max_lr, upconv_prog_lr)
 
-                upconv_lr = .0001   # ok for conv5
-                upconv_lr = 2.0
+                upconv_lr = 10.0   # Works everywhere??
+                #upconv_lr = .0001   # conv1?
+                #upconv_lr = .0001   # ok for conv5
+                #upconv_lr = .1     # conv5 mask10??
+                #upconv_lr = .01     # conv5 mask channel??
+                #upconv_lr = .001     # conv5 nomask??
+                #upconv_lr = 2.0     # ok for fc8
                 noise_lr = .01
-                noise_lr = 0.0
-                #code_decay = .99
-                code_decay = 1.0
+                noise_lr = 0.1
+                code_decay = .99
+                #code_decay = 1.0
                 print 'upconv_lr =', upconv_lr
                 
                 self.upconv_code += -upconv_lr * grad_code + noise_lr * np.random.normal(0, 1, self.upconv_code_shape)
@@ -254,9 +274,15 @@ class CaffeProcThread(CodependentThread):
                 self.upconv_code = np.maximum(np.minimum(self.upconv_code, self.upconv_code_clip.max()), 0)
                 self.upconv_code *= code_decay
 
-                if self.state.upconv_kicks > 0:
-                    self.upconv_code += np.random.normal(0, 2*self.state.upconv_kicks, self.upconv_code_shape)
-                    self.state.upconv_kicks = 0
+                if self.state.upconv_pokes > 0:
+                    self.upconv_code += np.random.normal(0, 2*self.state.upconv_pokes, self.upconv_code_shape)
+                    self.state.upconv_pokes = 0
+                elif self.state.upconv_pokes == -1:
+                    self.upconv_code = np.random.normal(0, .1, self.upconv_code_shape)
+                    self.upconv_code = np.maximum(np.minimum(self.upconv_code, self.upconv_code_clip), 0)
+                    self.state.upconv_pokes = 0
+                    
+                    
                     
                 print ('Im target code %g,%g,%g    upconv target code %g,%g,%g,   cost %g,  lr %g' %
                        (self.image_code_target_layer.min(), self.image_code_target_layer.max(), np.linalg.norm(self.image_code_target_layer),

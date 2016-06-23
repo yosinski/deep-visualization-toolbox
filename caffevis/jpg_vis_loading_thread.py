@@ -84,14 +84,26 @@ class JPGVisLoadingThread(CodependentThread):
                 pass                
 
             # 2. e.g. max_deconv/conv1/conv1_0037.jpg
+            #try:
+            #    jpg_path = os.path.join(self.settings.caffevis_unit_jpg_dir,
+            #                            'upconv',
+            #                            state_layer,
+            #                            '%s_%04d.jpg' % (state_layer, state_selected_unit))
+            #    img = caffe_load_image(jpg_path, color = True)
+            #    images[2] = ensure_uint255_and_resize_to_fit(img, resize_shape)
+            #except IOError:
+            #    pass
+            # 2. NEW upconv images
+            jpg_path = os.path.join(self.settings.caffevis_unit_jpg_dir,
+                                    'upconv',
+                                    state_layer,
+                                    '%s_%04d_montage.jpg' % (state_layer, state_selected_unit))
             try:
-                jpg_path = os.path.join(self.settings.caffevis_unit_jpg_dir,
-                                        'max_deconv',
-                                        state_layer,
-                                        '%s_%04d.jpg' % (state_layer, state_selected_unit))
                 img = caffe_load_image(jpg_path, color = True)
-                images[2] = ensure_uint255_and_resize_to_fit(img, resize_shape)
+                img_corner = crop_to_corner(img, 2)
+                images[2] = ensure_uint255_and_resize_to_fit(img_corner, resize_shape)
             except IOError:
+                print '\nAttempted to load file %s but failed. To supress this warning, remove layer "%s" from settings.caffevis_jpgvis_layers' % (jpg_path, state_layer)
                 pass
 
             # Prune images that were not found:

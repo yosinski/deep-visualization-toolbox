@@ -22,7 +22,11 @@ caffevis_label_layers    = ('fc8', 'prob')
 caffevis_prob_layer      = 'prob'
 caffevis_unit_jpg_dir    = '%DVT_ROOT%/models/caffenet-yos/unit_jpg_vis'
 caffevis_jpgvis_layers   = ['conv1', 'conv2', 'conv3', 'conv4', 'conv5', 'fc6', 'fc7', 'fc8', 'prob']
-caffevis_jpgvis_remap    = {'pool1': 'conv1', 'pool2': 'conv2', 'pool5': 'conv5'}
+caffevis_jpgvis_remap    = {'pool1': 'conv1', 'pool2': 'conv2', 'pool5': 'conv5',
+                            'relu1': 'conv1', 'relu2': 'conv2', 'relu3': 'conv3', 'relu4': 'conv4', 'relu5': 'conv5',
+                            'norm1': 'conv1', 'norm2': 'conv2',
+                            'relu6': 'fc6', 'drop6': 'fc6', 'relu7': 'fc7', 'drop7': 'fc7',
+                            'prob': 'fc8'}
 def caffevis_layer_pretty_name_fn(name):
     return name.replace('pool','p').replace('norm','n').replace('relu','r')
 

@@ -126,7 +126,14 @@ _.add('toggle_unit_jpgs', '9',
 
 _.add('upconv_mode', 'y',
        '(expert) Toggle upconv mode.')
-_.add('upconv_kick', 'p',
-       '(expert) Kick upconv mode.')
+_.add('upconv_poke', 'P',
+       '(expert) Poke upconv mode.')
+_.add('upconv_superpoke', 'p',
+       '(expert) Superpoke upconv mode (reset code completely).')
 
 bindings = _
+
+# Print help to console
+#keys = _._key_label_to_tag.keys()
+#helps = [_._tag_to_help[_._key_label_to_tag[key]] for key in keys]
+#print '\n'.join(['%s:\t%s' % (key,hlp) for key,hlp in zip(keys,helps)])
