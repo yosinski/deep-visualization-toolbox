@@ -54,7 +54,7 @@ window_panes = (
 
 
 # Set this to point to your compiled checkout of caffe
-caffevis_caffe_root      = '/home/jason/s_local/deep-visualization-toolbox/compiled-caffe-cuda'
+caffevis_caffe_root      = '/path/to/caffe'
 
 # Use GPU? Default is True.
 caffevis_mode_gpu = True
