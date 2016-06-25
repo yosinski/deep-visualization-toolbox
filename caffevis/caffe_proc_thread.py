@@ -220,7 +220,7 @@ class CaffeProcThread(CodependentThread):
                 #diffs = np.zeros((1,1000), 'float32')
                 #diffs[0,717] = -1.0
                 #diffs[0,933] = -1.0
-                print diffs
+                #print diffs
                 print diffs.min(), diffs.max()
                 #print 'Truck image code is %g, upconv code is %g' % (self.image_code_target_layer[0,717], upconv_code_target_layer[0,717])
                 #pdb.set_trace()

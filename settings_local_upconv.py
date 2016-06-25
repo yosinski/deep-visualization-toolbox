@@ -52,6 +52,6 @@ caffevis_caffe_root      = '/home/jason/s_local/deep-visualization-toolbox/compi
 caffevis_mode_gpu = True
 # Display tweaks.
 # Scale all window panes in UI by this factor
-global_scale = 1.1
+global_scale = 1.2
 # Scale all fonts by this factor
 global_font_size = .9

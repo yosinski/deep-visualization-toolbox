@@ -113,6 +113,14 @@ class JPGVisLoadingThread(CodependentThread):
             if len(images) > 0:
                 #print 'Stacking:', [im.shape for im in images]
                 stack_axis = 0 if self.settings.caffevis_jpgvis_stack_vert else 1
+
+                # HACK  to fix sizes
+                for ii in range(len(images)):
+                    if images[ii].shape[:2] != resize_shape:
+                        im = np.zeros(resize_shape + (3,), images[ii].dtype)
+                        im[:images[ii].shape[0], :images[ii].shape[1], :] = images[ii]
+                        images[ii] = im
+                
                 img_stacked = np.concatenate(images, axis = stack_axis)
                 #print 'Stacked:', img_stacked.shape
                 img_resize = ensure_uint255_and_resize_to_fit(img_stacked, data_shape)
