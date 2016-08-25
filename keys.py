@@ -30,6 +30,8 @@ key_data.extend([
     ('down',       0xf701, 0xffff),
     ('left',       0xf702, 0xffff),
     ('right',      0xf703, 0xffff),
+    ('pgup',       0xf72c, 0xffff),
+    ('pgdn',       0xf72d, 0xffff),
 
     # Ubuntu US/UK (note diff order vs Mac)
     ('left',       0xff51, 0xffff),

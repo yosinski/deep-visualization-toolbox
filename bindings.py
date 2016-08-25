@@ -62,9 +62,9 @@ _.add('freeze_cam', 'f',
        'Freeze or unfreeze camera capture')
 _.add('toggle_input_mode', 'c',
        'Toggle between camera and static files')
-_.add('static_file_increment', 'e',
+_.add_multikey('static_file_increment', ['e', 'pgdn'],
        'Load next static file')
-_.add('static_file_decrement', 'w',
+_.add_multikey('static_file_decrement', ['w', 'pgup'],
        'Load previous static file')
 _.add('help_mode', 'h',
        'Toggle this help screen')
