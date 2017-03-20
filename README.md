@@ -141,16 +141,6 @@ Once the toolbox is running, push 'h' to show a help screen. You can also have a
 
 
 
-# Other ways of running the toolbox
-
-If you have any problems running the Deep Vis Toolbox, here are a few things to try:
-
- * John Moeller has put together a [Docker container for the toolbox](https://github.com/fishcorn/dvtb-container). This may even work on Windows!
-
- * If you're desperate, it's also possible to [run the toolbox on Amazon EC2](doc/deep-vis-on-aws.md), but display will be much slower and images can be loaded only from file (not from webcam).
-
-
-
 # Troubleshooting
 
 If you have any problems running the Deep Vis Toolbox, here are a few things to try:
@@ -161,3 +151,16 @@ If you have any problems running the Deep Vis Toolbox, here are a few things to 
  * If the backprop pane in the lower left is just gray, it's probably because backprop and deconv are producing all zeros. By default, Caffe won't compute derivatives at the data layer, because they're not needed to update parameters. The fix is simple: just add `force_backward: true` to your network prototxt, [like this](https://github.com/yosinski/deep-visualization-toolbox/blob/master/models/caffenet-yos/caffenet-yos-deploy.prototxt#L7).
  * If the toolbox runs but the keys don't respond as expected, this may be because keys behave differently on different platforms. Run the `test_keys.py` script to test behavior on your system.
  * If none of that helps, feel free to [email me](http://yosinski.com/) or [submit an issue](https://github.com/yosinski/deep-visualization-toolbox/issues). I might have left out an important detail here or there :).
+
+
+
+# Other ways of running the toolbox
+
+If running the toolbox on a local Mac or Linux machine isn't working for you, you might want to try one of these other options:
+
+ * John Moeller has put together a [Docker container for the toolbox](https://github.com/fishcorn/dvtb-container). This should even work on Windows! (confirmation needed)
+
+ * If you're desperate, it's also possible to [run the toolbox on Amazon EC2](doc/deep-vis-on-aws.md), but display will be much slower and images can be loaded only from file (not from webcam).
+
+
+
