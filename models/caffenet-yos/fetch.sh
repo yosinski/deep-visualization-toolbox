@@ -35,7 +35,7 @@ function fetch_and_extract() {
 fetch_file caffenet-yos-weights http://c.yosinski.com/caffenet-yos-weights
 fetch_file ilsvrc_2012_mean.npy http://c.yosinski.com/ilsvrc_2012_mean.npy
 
-fetch_and_extract caffenet-yos_regularized_opt.tar.gz http://c.yosinski.com/ caffenet-yos_regularized_opt.tar.gz   unit_jpg_vis regularized_opt/conv1/conv1_0000_montage.jpg
+fetch_and_extract caffenet-yos_regularized_opt.tar.gz http://c.yosinski.com/caffenet-yos_regularized_opt.tar.gz   unit_jpg_vis regularized_opt/conv1/conv1_0000_montage.jpg
 fetch_and_extract caffenet-yos_max_im.tar.gz          http://c.yosinski.com/caffenet-yos_max_im.tar.gz             unit_jpg_vis max_im/conv1/conv1_0000.jpg
 fetch_and_extract caffenet-yos_max_deconv.tar.gz      http://c.yosinski.com/caffenet-yos_max_deconv.tar.gz         unit_jpg_vis max_deconv/conv1/conv1_0000.jpg
 
