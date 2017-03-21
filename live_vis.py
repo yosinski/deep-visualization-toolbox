@@ -47,10 +47,10 @@ class LiveVis(object):
     def __init__(self, settings):
         self.settings = settings
         self.bindings = bindings
-        
+
         self.app_classes = OrderedDict()
         self.apps = OrderedDict()
-        
+
         for module_path, app_name in settings.installed_apps:
             module = importlib.import_module(module_path)
             print 'got module', module
@@ -62,7 +62,7 @@ class LiveVis(object):
             app = app_class(settings, self.bindings)
             self.apps[app_name] = app
         self.help_mode = False
-        self.window_name = 'Deep Visualization Toolbox'    
+        self.window_name = 'Deep Visualization Toolbox'
         self.quit = False
         self.debug_level = 0
 
@@ -79,7 +79,7 @@ class LiveVis(object):
             'thick': self.settings.help_thick
         }
 
-        
+
     def init_window(self):
         cv2.namedWindow(self.window_name)
         max_i, max_j = 0, 0
@@ -145,7 +145,7 @@ class LiveVis(object):
             for heartbeat in heartbeat_functions:
                 #print 'Heartbeat: calling', heartbeat
                 heartbeat()
-            
+
             # Handle key presses
             keys = []
             # Collect key presses (multiple if len(range)>1)
@@ -155,7 +155,8 @@ class LiveVis(object):
                 if key == -1:
                     break
                 else:
-                    keys.append(key)
+                    if (key != 255):
+                        keys.append(key)
                     #print 'Got key:', key
             now = time.time()
             #print 'Since last:', now - last_render
@@ -163,7 +164,7 @@ class LiveVis(object):
             skip_imshow = False
             #if now - last_render > .05 and since_imshow < 1:
             #    skip_imshow = True
-            
+
             if skip_imshow:
                 since_imshow += 1
             else:
@@ -267,7 +268,7 @@ class LiveVis(object):
             app.quit()
 
         print 'Input thread joined and apps quit; exiting run_loop.'
-    
+
     def handle_key_pre_apps(self, key):
         tag = self.bindings.get_tag(key)
         if tag == 'freeze_cam':
@@ -321,7 +322,7 @@ class LiveVis(object):
     def draw_help(self):
         self.help_buffer[:] = self.help_buffer[:] * .7
         self.help_pane.data[:] = self.help_pane.data[:] * .7
-        
+
         loc = self.settings.help_loc[::-1]   # Reverse to OpenCV c,r order
         defaults = self.help_pane_defaults
         lines = []
