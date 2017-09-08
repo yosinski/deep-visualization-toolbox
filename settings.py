@@ -298,6 +298,8 @@ caffevis_label_clr = locals().get('caffevis_label_clr', (.8,.8,.8))
 caffevis_label_fsize = locals().get('caffevis_label_fsize', 1.0 * global_font_size)
 caffevis_label_thick = locals().get('caffevis_label_thick', 1)
 
+# caffe net parameter - channel swap
+caffe_net_channel_swap = locals().get('caffe_net_channel_swap', (2,1,0))
 
 
 ####################################

@@ -29,8 +29,13 @@ class CaffeVisApp(BaseApp):
         self.settings = settings
         self.bindings = key_bindings
 
-        self._net_channel_swap = (2,1,0)
-        self._net_channel_swap_inv = tuple([self._net_channel_swap.index(ii) for ii in range(len(self._net_channel_swap))])
+        self._net_channel_swap = settings.caffe_net_channel_swap
+
+        if self._net_channel_swap is None:
+            self._net_channel_swap_inv = None
+        else:
+            self._net_channel_swap_inv = tuple([self._net_channel_swap.index(ii) for ii in range(len(self._net_channel_swap))])
+
         self._range_scale = 1.0      # not needed; image already in [0,255]
 
         # Set the mode to CPU or GPU. Note: in the latest Caffe
@@ -56,7 +61,28 @@ class CaffeVisApp(BaseApp):
         if isinstance(settings.caffevis_data_mean, basestring):
             # If the mean is given as a filename, load the file
             try:
-                self._data_mean = np.load(settings.caffevis_data_mean)
+
+                filename, file_extension = os.path.splitext(settings.caffevis_data_mean)
+                if file_extension == ".npy":
+                    # load mean from numpy array
+                    self._data_mean = np.load(settings.caffevis_data_mean)
+                    print "Loaded mean from numpy file, data_mean.shape: ", self._data_mean.shape
+
+                elif file_extension == ".binaryproto":
+
+                    # load mean from binary protobuf file
+                    blob = caffe.proto.caffe_pb2.BlobProto()
+                    data = open(settings.caffevis_data_mean, 'rb').read()
+                    blob.ParseFromString(data)
+                    self._data_mean = np.array(caffe.io.blobproto_to_array(blob))
+                    self._data_mean = np.squeeze(self._data_mean)
+                    print "Loaded mean from binaryproto file, data_mean.shape: ", self._data_mean.shape
+
+                else:
+                    # unknown file extension, trying to load as numpy array
+                    self._data_mean = np.load(settings.caffevis_data_mean)
+                    print "Loaded mean from numpy file, data_mean.shape: ", self._data_mean.shape
+
             except IOError:
                 print '\n\nCound not load mean file:', settings.caffevis_data_mean
                 print 'Ensure that the values in settings.py point to a valid model weights file, network'
@@ -502,8 +528,11 @@ class CaffeVisApp(BaseApp):
             #grad_img = self.net.deprocess('data', diff_blob)
             grad_blob = grad_blob[0]                    # bc01 -> c01
             grad_blob = grad_blob.transpose((1,2,0))    # c01 -> 01c
-            grad_img = grad_blob[:, :, self._net_channel_swap_inv]  # e.g. BGR -> RGB
-
+            if self._net_channel_swap_inv is None:
+                grad_img = grad_blob[:, :, :]  # e.g. BGR -> RGB
+            else:
+                grad_img = grad_blob[:, :, self._net_channel_swap_inv]  # e.g. BGR -> RGB
+                
             # Mode-specific processing
             assert back_mode in ('grad', 'deconv')
             assert back_filt_mode in ('raw', 'gray', 'norm', 'normblur')
