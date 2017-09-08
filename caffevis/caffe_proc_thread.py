@@ -1,5 +1,6 @@
 import time
 import cv2
+import numpy as np
 
 from codependent_thread import CodependentThread
 from misc import WithTimer
@@ -10,7 +11,7 @@ from caffevis_helper import net_preproc_forward
 class CaffeProcThread(CodependentThread):
     '''Runs Caffe in separate thread.'''
 
-    def __init__(self, net, state, loop_sleep, pause_after_keys, heartbeat_required, mode_gpu):
+    def __init__(self, settings, net, state, loop_sleep, pause_after_keys, heartbeat_required, mode_gpu):
         CodependentThread.__init__(self, heartbeat_required)
         self.daemon = True
         self.net = net
@@ -24,7 +25,10 @@ class CaffeProcThread(CodependentThread):
         self.pause_after_keys = pause_after_keys
         self.debug_level = 0
         self.mode_gpu = mode_gpu      # Needed so the mode can be set again in the spawned thread, because there is a separate Caffe object per thread.
-        
+
+        self.settings = settings
+
+
     def run(self):
         print 'CaffeProcThread.run called'
         frame = None
@@ -80,9 +84,20 @@ class CaffeProcThread(CodependentThread):
             if run_fwd:
                 #print 'TIMING:, processing frame'
                 self.frames_processed_fwd += 1
-                im_small = cv2.resize(frame, self.input_dims)
+
+                if self.settings.static_files_input_mode == "siamese_image_list":
+                    frame1 = frame[0]
+                    frame2 = frame[1]
+
+                    im_small1 = cv2.resize(frame1, self.input_dims)
+                    im_small2 = cv2.resize(frame2, self.input_dims)
+                    im_small = np.concatenate( (im_small1, im_small2), axis=2)
+
+                else:
+                    im_small = cv2.resize(frame, self.input_dims)
+
                 with WithTimer('CaffeProcThread:forward', quiet = self.debug_level < 1):
-                    net_preproc_forward(self.net, im_small, self.input_dims)
+                    net_preproc_forward(self.settings, self.net, im_small, self.input_dims)
 
             if run_back:
                 diffs = self.net.blobs[backprop_layer].diff * 0

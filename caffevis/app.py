@@ -152,7 +152,7 @@ class CaffeVisApp(BaseApp):
 
         if self.proc_thread is None or not self.proc_thread.is_alive():
             # Start thread if it's not already running
-            self.proc_thread = CaffeProcThread(self.net, self.state,
+            self.proc_thread = CaffeProcThread(self.settings, self.net, self.state,
                                                self.settings.caffevis_frame_wait_sleep,
                                                self.settings.caffevis_pause_after_keys,
                                                self.settings.caffevis_heartbeat_required,
@@ -553,8 +553,21 @@ class CaffeVisApp(BaseApp):
             if len(grad_img.shape) == 2:
                 grad_img = np.tile(grad_img[:,:,np.newaxis], 3)
 
-            grad_img_resize = ensure_uint255_and_resize_to_fit(grad_img, pane.data.shape)
+            if (self.settings.static_files_input_mode ==  "siamese_image_list") and (grad_img.shape[2] == 6):
 
+                grad_img1 = grad_img[:, :, 0:3]
+                grad_img2 = grad_img[:, :, 3:6]
+
+                half_pane_shape = (pane.data.shape[0] / 2, pane.data.shape[1])
+                grad_img_disp1 = cv2.resize(grad_img1[:], half_pane_shape)
+                grad_img_disp2 = cv2.resize(grad_img2[:], half_pane_shape)
+
+                grad_img_disp = np.concatenate((grad_img_disp1, grad_img_disp2), axis=1)
+
+            else:
+                grad_img_disp = grad_img
+
+            grad_img_resize = ensure_uint255_and_resize_to_fit(grad_img_disp, pane.data.shape)
             pane.data[0:grad_img_resize.shape[0], 0:grad_img_resize.shape[1], :] = grad_img_resize
 
     def _draw_jpgvis_pane(self, pane):

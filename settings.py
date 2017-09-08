@@ -101,13 +101,19 @@ if debug_window_panes:
 
 help_pane_loc = locals().get('help_pane_loc', (.07, .07, .86, .86))    # as a fraction of main window
 window_background = locals().get('window_background', (.2, .2, .2))
-stale_background =locals().get('stale_background',  (.3, .3, .2))
+stale_background = locals().get('stale_background',  (.3, .3, .2))
 static_files_dir = locals().get('static_files_dir', 'input_images')
 static_files_regexp = locals().get('static_files_regexp', '.*\.(jpg|jpeg|png)$')
 static_files_ignore_case = locals().get('static_files_ignore_case', True)
 # True to stretch to square, False to crop to square. (Can change at
 # runtime via 'stretch_mode' key.)
 static_file_stretch_mode = locals().get('static_file_stretch_mode', False)
+
+# contains the input mode for reading static images, can be: 'directory', 'image_list', 'siamese_image_list'
+static_files_input_mode = locals().get('static_files_input_mode', 'directory')
+
+# contains the file name to read, relevant only when static_files_input_mode is 'image_list' or 'siamese_image_list'
+static_files_input_file = locals().get('static_files_input_file', 'images_file_list.txt')
 
 # int, 0+. How many times to go through the main loop after a keypress
 # before resuming handling frames (0 to handle every frame as it

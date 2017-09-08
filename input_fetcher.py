@@ -3,10 +3,11 @@ import cv2
 import re
 import time
 from threading import RLock
+import numpy as np
 
 from codependent_thread import CodependentThread
 from image_misc import cv2_imshow_rgb, cv2_read_file_rgb, read_cam_frame, crop_to_square
-
+from misc import tsplit
 
 
 class InputImageFetcher(CodependentThread):
@@ -20,8 +21,12 @@ class InputImageFetcher(CodependentThread):
         self.latest_frame_idx = -1
         self.latest_frame_data = None
         self.latest_frame_is_from_cam = False
+
+        # True for loading from file, False for loading from camera
         self.static_file_mode = True
         self.settings = settings
+
+        # True for streching the image, False for cropping largest square
         self.static_file_stretch_mode = self.settings.static_file_stretch_mode
         
         # Cam input
@@ -33,9 +38,17 @@ class InputImageFetcher(CodependentThread):
         self.freeze_cam = False
 
         # Static file input
+
+        # latest image filename selected, used to avoid reloading
         self.latest_static_filename = None
+
+        # latest loaded image frame, holds the pixels and used to force reloading
         self.latest_static_frame = None
+
+        # keeps current index of loaded file, doesn't seem important
         self.static_file_idx = None
+
+        # contains the requested number of increaments for file index
         self.static_file_idx_increment = 0
         
     def bind_camera(self):
@@ -146,6 +159,42 @@ class InputImageFetcher(CodependentThread):
             self.latest_frame_data = frame
             self.latest_frame_is_from_cam = from_cam
 
+    def get_files_from_directory(self):
+        # returns list of files in requested directory
+
+        available_files = []
+        match_flags = re.IGNORECASE if self.settings.static_files_ignore_case else 0
+        for filename in os.listdir(self.settings.static_files_dir):
+            if re.match(self.settings.static_files_regexp, filename, match_flags):
+                available_files.append(filename)
+
+        return available_files
+
+    def get_files_from_image_list(self):
+        # returns list of files in requested image list file
+
+        available_files = []
+
+        with open(self.settings.static_files_input_file, 'r') as image_list_file:
+            lines = image_list_file.readlines()
+            # take first token from each line
+            available_files = [tsplit(line, True,' ',',','\t')[0] for line in lines if line.strip() != ""]
+
+        return available_files
+
+    def get_files_from_siamese_image_list(self):
+        # returns list of pair files in requested siamese image list file
+
+        available_files = []
+
+        with open(self.settings.static_files_input_file, 'r') as image_list_file:
+            lines = image_list_file.readlines()
+            # take first and second tokens from each line
+            available_files = [(tsplit(line, True, ' ', ',','\t')[0], tsplit(line, True, ' ', ',','\t')[1])
+                               for line in lines if line.strip() != ""]
+
+        return available_files
+
     def check_increment_and_load_image(self):
         with self.lock:
             if (self.static_file_idx_increment == 0 and
@@ -154,11 +203,18 @@ class InputImageFetcher(CodependentThread):
                 self.latest_static_frame is not None):
                 # Skip if a static frame is already loaded and there is no increment
                 return
-            available_files = []
-            match_flags = re.IGNORECASE if self.settings.static_files_ignore_case else 0
-            for filename in os.listdir(self.settings.static_files_dir):
-                if re.match(self.settings.static_files_regexp, filename, match_flags):
-                    available_files.append(filename)
+
+            # available_files - local list of files
+            if self.settings.static_files_input_mode == "directory":
+                available_files = self.get_files_from_directory()
+            elif self.settings.static_files_input_mode == "image_list":
+                available_files = self.get_files_from_image_list()
+            elif self.settings.static_files_input_mode == "siamese_image_list":
+                available_files = self.get_files_from_siamese_image_list()
+            else:
+                raise Exception(('Error: setting static_files_input_mode has invalid option (%s)' %
+                                (self.settings.static_files_input_mode) ))
+
             #print 'Found files:'
             #for filename in available_files:
             #    print '   %s' % filename
@@ -170,8 +226,21 @@ class InputImageFetcher(CodependentThread):
             self.static_file_idx_increment = 0
             if self.latest_static_filename != available_files[self.static_file_idx] or self.latest_static_frame is None:
                 self.latest_static_filename = available_files[self.static_file_idx]
-                im = cv2_read_file_rgb(os.path.join(self.settings.static_files_dir, self.latest_static_filename))
-                if not self.static_file_stretch_mode:
-                    im = crop_to_square(im)
+
+                if self.settings.static_files_input_mode == "siamese_image_list":
+                    # loading two images for siamese network
+                    im1 = cv2_read_file_rgb(os.path.join(self.settings.static_files_dir, self.latest_static_filename[0]))
+                    im2 = cv2_read_file_rgb(os.path.join(self.settings.static_files_dir, self.latest_static_filename[1]))
+                    if not self.static_file_stretch_mode:
+                        im1 = crop_to_square(im1)
+                        im2 = crop_to_square(im2)
+
+                    im = (im1,im2)
+
+                else:
+                    im = cv2_read_file_rgb(os.path.join(self.settings.static_files_dir, self.latest_static_filename))
+                    if not self.static_file_stretch_mode:
+                        im = crop_to_square(im)
+
                 self.latest_static_frame = im
             self._increment_and_set_frame(self.latest_static_frame, False)
