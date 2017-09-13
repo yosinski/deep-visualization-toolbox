@@ -3,7 +3,7 @@
 import os
 import time
 import errno
-
+import re
 
 
 class WithTimer:
@@ -49,3 +49,14 @@ def combine_dicts(dicts_tuple):
         for key in dictionary.keys():
             ret['%s%s' % (prefix, key)] = dictionary[key]
     return ret
+
+
+def tsplit(string, no_empty_strings, *delimiters):
+    # split string using multiple delimiters
+
+    pattern = '|'.join(map(re.escape, delimiters))
+    strings = re.split(pattern, string)
+    if no_empty_strings:
+        strings = filter(None, strings)
+
+    return strings
